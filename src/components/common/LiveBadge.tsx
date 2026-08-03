@@ -1,4 +1,4 @@
-export function LiveBadge({ minute }: { minute?: number }) {
+export function LiveBadge({ minute }: { minute?: number | undefined }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full bg-live px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
       <span className="relative flex h-2 w-2">
