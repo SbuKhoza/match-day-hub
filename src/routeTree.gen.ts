@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FantasyRouteImport } from './routes/fantasy'
+import { Route as MatchCenterRouteImport } from './routes/match-center'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as VideosRouteImport } from './routes/videos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FantasyRoute = FantasyRouteImport.update({
+  id: '/fantasy',
+  path: '/fantasy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchCenterRoute = MatchCenterRouteImport.update({
+  id: '/match-center',
+  path: '/match-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VideosRoute = VideosRouteImport.update({
+  id: '/videos',
+  path: '/videos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/fantasy': typeof FantasyRoute
+  '/match-center': typeof MatchCenterRoute
+  '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/videos': typeof VideosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/fantasy': typeof FantasyRoute
+  '/match-center': typeof MatchCenterRoute
+  '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/videos': typeof VideosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/fantasy': typeof FantasyRoute
+  '/match-center': typeof MatchCenterRoute
+  '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
+  '/videos': typeof VideosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/fantasy'
+    | '/match-center'
+    | '/news'
+    | '/onboarding'
+    | '/profile'
+    | '/videos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/fantasy'
+    | '/match-center'
+    | '/news'
+    | '/onboarding'
+    | '/profile'
+    | '/videos'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/fantasy'
+    | '/match-center'
+    | '/news'
+    | '/onboarding'
+    | '/profile'
+    | '/videos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  FantasyRoute: typeof FantasyRoute
+  MatchCenterRoute: typeof MatchCenterRoute
+  NewsRoute: typeof NewsRoute
+  OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
+  VideosRoute: typeof VideosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +143,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fantasy': {
+      id: '/fantasy'
+      path: '/fantasy'
+      fullPath: '/fantasy'
+      preLoaderRoute: typeof FantasyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/match-center': {
+      id: '/match-center'
+      path: '/match-center'
+      fullPath: '/match-center'
+      preLoaderRoute: typeof MatchCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/videos': {
+      id: '/videos'
+      path: '/videos'
+      fullPath: '/videos'
+      preLoaderRoute: typeof VideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  FantasyRoute: FantasyRoute,
+  MatchCenterRoute: MatchCenterRoute,
+  NewsRoute: NewsRoute,
+  OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
+  VideosRoute: VideosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
