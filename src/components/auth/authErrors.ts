@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
 
 export function authErrorMessage(error: unknown): string {
   const code = (error as { code?: string })?.code;
-  if (code && MESSAGES[code]) return MESSAGES[code];
+  const mapped = code ? MESSAGES[code] : undefined;
+  if (mapped) return mapped;
   return (error as Error)?.message ?? "Something went wrong. Please try again.";
 }
