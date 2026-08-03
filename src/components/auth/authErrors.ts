@@ -8,6 +8,10 @@ const MESSAGES: Record<string, string> = {
   "auth/user-not-found": "We couldn't find an account with that email.",
   "auth/too-many-requests": "Too many attempts. Try again in a moment.",
   "auth/network-request-failed": "Network error. Check your connection and try again.",
+  "auth/configuration-not-found":
+    "Email/password sign-in isn't enabled yet in the Firebase console (Authentication → Sign-in method).",
+  "auth/operation-not-allowed":
+    "Email/password sign-in isn't enabled yet in the Firebase console (Authentication → Sign-in method).",
 };
 
 export function authErrorMessage(error: unknown): string {
