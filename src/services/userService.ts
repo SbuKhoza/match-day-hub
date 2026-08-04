@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 
 import type { ThemeMode, UserProfile } from "@/types";
@@ -44,5 +44,6 @@ export async function updateUserProfile(
   uid: string,
   patch: Partial<Pick<UserProfile, "name" | "favoriteTeam" | "theme">>,
 ): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, uid), patch);
+  // merge so a missing profile doc (e.g. legacy account) is created rather than failing
+  await setDoc(doc(db, COLLECTION, uid), { uid, ...patch }, { merge: true });
 }
