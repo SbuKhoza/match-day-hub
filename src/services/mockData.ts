@@ -1,18 +1,22 @@
 import type { Article, LeagueStanding, Match, Team, Video } from "@/types";
 
 export const TEAMS: Team[] = [
-  { id: "arsenal", name: "Arsenal", shortName: "ARS", league: "Premier League", primary: "#EF0107" },
-  { id: "chelsea", name: "Chelsea", shortName: "CHE", league: "Premier League", primary: "#034694" },
-  { id: "liverpool", name: "Liverpool", shortName: "LIV", league: "Premier League", primary: "#C8102E" },
-  { id: "man-city", name: "Manchester City", shortName: "MCI", league: "Premier League", primary: "#6CABDD" },
-  { id: "man-united", name: "Manchester United", shortName: "MUN", league: "Premier League", primary: "#DA291C" },
-  { id: "tottenham", name: "Tottenham Hotspur", shortName: "TOT", league: "Premier League", primary: "#132257" },
-  { id: "newcastle", name: "Newcastle United", shortName: "NEW", league: "Premier League", primary: "#241F20" },
-  { id: "real-madrid", name: "Real Madrid", shortName: "RMA", league: "La Liga", primary: "#FEBE10" },
-  { id: "barcelona", name: "FC Barcelona", shortName: "BAR", league: "La Liga", primary: "#A50044" },
-  { id: "bayern", name: "Bayern München", shortName: "BAY", league: "Bundesliga", primary: "#DC052D" },
-  { id: "dortmund", name: "Borussia Dortmund", shortName: "BVB", league: "Bundesliga", primary: "#FDE100" },
-  { id: "psg", name: "Paris Saint-Germain", shortName: "PSG", league: "Ligue 1", primary: "#004170" },
+  { id: "mamelodi-sundowns", name: "Mamelodi Sundowns", shortName: "SUN", league: "Betway Premiership", primary: "#F9E300" },
+  { id: "orlando-pirates", name: "Orlando Pirates", shortName: "PIR", league: "Betway Premiership", primary: "#1A1A1A" },
+  { id: "kaizer-chiefs", name: "Kaizer Chiefs", shortName: "CHI", league: "Betway Premiership", primary: "#FFB612" },
+  { id: "supersport-united", name: "SuperSport United", shortName: "SSU", league: "Betway Premiership", primary: "#0033A0" },
+  { id: "stellenbosch", name: "Stellenbosch FC", shortName: "STE", league: "Betway Premiership", primary: "#8B1B1B" },
+  { id: "sekhukhune-united", name: "Sekhukhune United", shortName: "SEK", league: "Betway Premiership", primary: "#C8102E" },
+  { id: "amazulu", name: "AmaZulu FC", shortName: "AMA", league: "Betway Premiership", primary: "#009639" },
+  { id: "golden-arrows", name: "Golden Arrows", shortName: "ARR", league: "Betway Premiership", primary: "#F5A800" },
+  { id: "chippa-united", name: "Chippa United", shortName: "CHP", league: "Betway Premiership", primary: "#0E7C3A" },
+  { id: "polokwane-city", name: "Polokwane City", shortName: "POL", league: "Betway Premiership", primary: "#D62828" },
+  { id: "richards-bay", name: "Richards Bay FC", shortName: "RIC", league: "Betway Premiership", primary: "#1D3557" },
+  { id: "marumo-gallants", name: "Marumo Gallants", shortName: "MAR", league: "Betway Premiership", primary: "#5B2C6F" },
+  { id: "magesi", name: "Magesi FC", shortName: "MAG", league: "Betway Premiership", primary: "#0A9396" },
+  { id: "orbit-college", name: "Orbit College FC", shortName: "ORB", league: "Betway Premiership", primary: "#264653" },
+  { id: "durban-city", name: "Durban City FC", shortName: "DUR", league: "Betway Premiership", primary: "#1B4965" },
+  { id: "siwelele", name: "Siwelele FC", shortName: "SIW", league: "Betway Premiership", primary: "#B5179E" },
 ];
 
 export function getTeam(id: string | null | undefined): Team | undefined {
@@ -21,7 +25,7 @@ export function getTeam(id: string | null | undefined): Team | undefined {
 
 export const STANDING: LeagueStanding = {
   position: 3,
-  teamId: "arsenal",
+  teamId: "mamelodi-sundowns",
   played: 24,
   points: 51,
   form: ["W", "W", "D", "L", "W"],
@@ -41,7 +45,7 @@ export function buildMatches(teamId: string): {
     previous: {
       id: "prev",
       status: "finished",
-      competition: "Premier League",
+      competition: "Betway Premiership",
       kickoff: new Date(Date.now() - 4 * 86_400_000).toISOString(),
       venue: "Home",
       home: asMatchTeam(team),
@@ -52,7 +56,7 @@ export function buildMatches(teamId: string): {
     current: {
       id: "live",
       status: "live",
-      competition: "Champions League",
+      competition: "CAF Champions League",
       kickoff: new Date().toISOString(),
       venue: "Home",
       home: asMatchTeam(team),
@@ -65,7 +69,7 @@ export function buildMatches(teamId: string): {
       {
         id: "next-1",
         status: "upcoming",
-        competition: "Premier League",
+        competition: "Betway Premiership",
         kickoff: new Date(Date.now() + 3 * 86_400_000).toISOString(),
         venue: "Away",
         home: asMatchTeam(rival),
@@ -74,7 +78,7 @@ export function buildMatches(teamId: string): {
       {
         id: "next-2",
         status: "upcoming",
-        competition: "Domestic Cup",
+        competition: "Nedbank Cup",
         kickoff: new Date(Date.now() + 9 * 86_400_000).toISOString(),
         venue: "Home",
         home: asMatchTeam(team),
