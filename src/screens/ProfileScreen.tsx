@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { Check, LogOut } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/common/Button";
@@ -16,17 +16,23 @@ export function ProfileScreen() {
   const { profile, user, logout, saveFavoriteTeam, savePreferredTheme } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [teamStatus, setTeamStatus] = useState<string | null>(null);
 
   const name = profile?.name ?? user?.displayName ?? "Guest";
   const favorite = getTeam(profile?.favoriteTeam);
 
   async function handleTeamChange(teamId: string) {
-    setSaving(true);
+    if (saving) return;
+    setSaving(teamId);
+    setTeamStatus(null);
     try {
       await saveFavoriteTeam(teamId);
+      setTeamStatus(`Saved — ${getTeam(teamId)?.name ?? "team"} is now your club.`);
+    } catch {
+      setTeamStatus("Couldn't save your team. Check your connection and try again.");
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   }
 
@@ -84,7 +90,9 @@ export function ProfileScreen() {
         <CardBody>
           <h2 className="text-lg font-semibold">Favourite team</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {saving ? "Saving…" : "Tap a club to update your personalised feed."}
+            {saving
+              ? "Saving…"
+              : (teamStatus ?? "Tap a club to update your personalised feed.")}
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {TEAMS.map((team) => (
@@ -92,13 +100,17 @@ export function ProfileScreen() {
                 key={team.id}
                 type="button"
                 onClick={() => handleTeamChange(team.id)}
+                disabled={saving !== null}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-secondary",
+                  "flex items-center gap-3 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-secondary disabled:opacity-60",
                   profile?.favoriteTeam === team.id && "ring-2 ring-foreground",
                 )}
               >
                 <TeamBadge team={team} size="sm" />
                 <span className="min-w-0 truncate text-sm font-medium">{team.name}</span>
+                {profile?.favoriteTeam === team.id ? (
+                  <Check className="ml-auto h-4 w-4 shrink-0" />
+                ) : null}
               </button>
             ))}
           </div>
