@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // A user profile document is private to its owner.
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Owner may create their own profile once, with their own uid.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.uid == uid;
+
+      // Owner may update their own profile, but never reassign ownership.
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.uid == resource.data.uid;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
