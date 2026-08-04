@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, CalendarDays, MapPin } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Card, CardBody } from "@/components/common/Card";
 import { LiveBadge } from "@/components/common/LiveBadge";
@@ -22,7 +23,7 @@ function FormPips({ form }: { form: LeagueStanding["form"] }) {
   );
 }
 
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
