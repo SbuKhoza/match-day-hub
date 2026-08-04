@@ -46,6 +46,8 @@ export interface LeagueStanding {
   form: ("W" | "D" | "L")[];
 }
 
+export type ArticleCategory = "team" | "league" | "fantasy";
+
 export interface Article {
   id: string;
   headline: string;
@@ -53,6 +55,7 @@ export interface Article {
   image: string;
   source: string;
   publishedAt: string;
+  category: ArticleCategory;
 }
 
 export interface Video {

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, CalendarDays, MapPin } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Card, CardBody } from "@/components/common/Card";
 import { LiveBadge } from "@/components/common/LiveBadge";
@@ -9,15 +10,24 @@ import { formatKickoff, ordinal, relativeDay } from "@/utils/format";
 
 function FormPips({ form }: { form: LeagueStanding["form"] }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1">
       {form.map((result, index) => (
         <span
           key={`${result}-${index}`}
-          className="flex h-6 w-6 items-center justify-center rounded-lg border border-border text-[11px] font-semibold text-muted-foreground"
+          className="flex h-5 w-5 items-center justify-center rounded-md border border-border text-[10px] font-semibold text-muted-foreground"
         >
           {result}
         </span>
       ))}
+    </div>
+  );
+}
+
+function Stat({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <div className="mt-0.5 text-sm font-semibold">{children}</div>
     </div>
   );
 }
@@ -36,111 +46,84 @@ export function FavoriteTeamCard({
   live?: Match | null;
 }) {
   return (
-    <Card className="shadow-lifted">
-      <CardBody className="space-y-6 p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <TeamBadge team={team} size="xl" />
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+    <Card>
+      <CardBody className="space-y-3 p-4 sm:p-5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <TeamBadge team={team} size="md" />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 {team.league}
               </p>
-              <h2 className="text-2xl font-semibold sm:text-3xl">{team.name}</h2>
+              <h2 className="truncate text-lg font-semibold sm:text-xl">{team.name}</h2>
             </div>
           </div>
           <Link
             to="/profile"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            Change team
-            <ArrowUpRight className="h-4 w-4" />
+            Change
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-secondary p-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Position</p>
-            <p className="mt-1 text-2xl font-semibold">{ordinal(standing.position)}</p>
-          </div>
-          <div className="rounded-2xl bg-secondary p-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Points</p>
-            <p className="mt-1 text-2xl font-semibold">
-              {standing.points}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">
-                / {standing.played} pl
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl bg-secondary px-4 py-3">
+          <Stat label="Position">{ordinal(standing.position)}</Stat>
+          <Stat label="Points">
+            {standing.points}
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
+              / {standing.played} pl
+            </span>
+          </Stat>
+          <Stat label="Form">
+            <FormPips form={standing.form} />
+          </Stat>
+          {live ? (
+            <div className="ml-auto flex items-center gap-3">
+              <LiveBadge minute={live.minute} />
+              <span className="text-sm font-semibold tabular-nums">
+                {live.home.shortName} {live.homeScore} – {live.awayScore} {live.away.shortName}
               </span>
-            </p>
-          </div>
-          <div className="rounded-2xl bg-secondary p-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Form</p>
-            <div className="mt-2">
-              <FormPips form={standing.form} />
             </div>
-          </div>
+          ) : null}
         </div>
 
-        {live ? (
-          <div className="rounded-3xl border border-live/30 bg-live/5 p-5">
-            <div className="flex items-center justify-between gap-3">
-              <LiveBadge minute={live.minute} />
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                {live.competition}
-              </span>
-            </div>
-            <div className="mt-4 flex items-center justify-between gap-4">
-              <span className="flex items-center gap-3">
-                <TeamBadge team={live.home} size="sm" />
-                <span className="text-sm font-medium">{live.home.name}</span>
-              </span>
-              <span className="text-3xl font-semibold tabular-nums">
-                {live.homeScore} – {live.awayScore}
-              </span>
-              <span className="flex items-center gap-3">
-                <span className="hidden text-sm font-medium sm:inline">{live.away.name}</span>
-                <TeamBadge team={live.away} size="sm" />
-              </span>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-3xl border border-border p-5">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Previous result
-            </p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Previous</p>
+              <p className="truncate text-sm font-medium">
                 {previous.home.shortName} vs {previous.away.shortName}
-              </span>
-              <span className="text-xl font-semibold tabular-nums">
-                {previous.homeScore} – {previous.awayScore}
-              </span>
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {relativeDay(previous.kickoff)}
+                </span>
+              </p>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {previous.competition} · {relativeDay(previous.kickoff)}
-            </p>
+            <span className="shrink-0 text-base font-semibold tabular-nums">
+              {previous.homeScore} – {previous.awayScore}
+            </span>
           </div>
 
-          <div className="rounded-3xl border border-border p-5">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Next match</p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Next</p>
+              <p className="truncate text-sm font-medium">
                 {next.home.shortName} vs {next.away.shortName}
-              </span>
-              <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-                {relativeDay(next.kickoff)}
-              </span>
+              </p>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <CalendarDays className="h-3 w-3" />
+                  {formatKickoff(next.kickoff)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {next.venue}
+                </span>
+              </p>
             </div>
-            <p className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays className="h-3.5 w-3.5" />
-                {formatKickoff(next.kickoff)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />
-                {next.venue}
-              </span>
-            </p>
+            <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium">
+              {relativeDay(next.kickoff)}
+            </span>
           </div>
         </div>
       </CardBody>

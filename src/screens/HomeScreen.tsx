@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { FavoriteTeamCard } from "@/components/home/FavoriteTeamCard";
-import { NewsCard } from "@/components/home/NewsCard";
+import { NewsCarousel } from "@/components/home/NewsCarousel";
 import { VideoCarousel } from "@/components/home/VideoCarousel";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,29 +9,31 @@ import { contentService } from "@/services/contentService";
 
 export function HomeScreen() {
   const { profile, user } = useAuth();
-  const teamId = profile?.favoriteTeam ?? "arsenal";
+  const teamId = profile?.favoriteTeam ?? "mamelodi-sundowns";
 
   const { data } = useQuery({
     queryKey: ["home", teamId],
     queryFn: async () => {
-      const [team, standing, matches, articles, videos] = await Promise.all([
+      const [team, standing, matches, teamNews, leagueNews, fantasyNews, videos] = await Promise.all([
         contentService.getTeam(teamId),
         contentService.getStanding(teamId),
         contentService.getTeamMatches(teamId),
-        contentService.listArticles(5),
+        contentService.listArticlesByCategory("team"),
+        contentService.listArticlesByCategory("league"),
+        contentService.listArticlesByCategory("fantasy"),
         contentService.listVideos(3),
       ]);
-      return { team, standing, matches, articles, videos };
+      return { team, standing, matches, teamNews, leagueNews, fantasyNews, videos };
     },
   });
 
   const firstName = (profile?.name ?? user?.displayName ?? "there").split(" ")[0];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <header>
         <p className="text-sm text-muted-foreground">Welcome back</p>
-        <h1 className="text-3xl font-semibold sm:text-4xl">{firstName}</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{firstName}</h1>
       </header>
 
       {data?.team && data.standing && data.matches ? (
@@ -43,18 +45,30 @@ export function HomeScreen() {
           live={data.matches.current}
         />
       ) : (
-        <div className="h-72 animate-pulse rounded-3xl bg-muted" />
+        <div className="h-44 animate-pulse rounded-3xl bg-muted" />
       )}
 
       <section>
-        <SectionHeader title="Latest news" subtitle="Handpicked stories for your club" to="/news" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(data?.articles ?? []).map((article, index) => (
-            <div key={article.id} className={index === 0 ? "md:col-span-2 lg:col-span-2" : ""}>
-              <NewsCard article={article} featured={index === 0} />
-            </div>
-          ))}
-        </div>
+        <SectionHeader
+          title={data?.team ? `${data.team.name} news` : "Your club news"}
+          subtitle="Latest on your favourite team"
+          to="/news"
+        />
+        <NewsCarousel articles={data?.teamNews ?? []} />
+      </section>
+
+      <section>
+        <SectionHeader title="Around the league" subtitle="News from every other PSL club" to="/news" />
+        <NewsCarousel articles={data?.leagueNews ?? []} />
+      </section>
+
+      <section>
+        <SectionHeader
+          title="Fantasy news"
+          subtitle="How the latest games change your fantasy side"
+          to="/fantasy"
+        />
+        <NewsCarousel articles={data?.fantasyNews ?? []} />
       </section>
 
       <section>

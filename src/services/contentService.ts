@@ -1,5 +1,5 @@
 import { ARTICLES, VIDEOS, buildMatches, getTeam, STANDING, TEAMS } from "./mockData";
-import type { Article, LeagueStanding, Match, Team, Video } from "@/types";
+import type { Article, ArticleCategory, LeagueStanding, Match, Team, Video } from "@/types";
 
 /**
  * Content layer. Swap these bodies for real API / Firestore reads later —
@@ -14,6 +14,13 @@ export const contentService = {
   ): Promise<{ previous: Match; current: Match; upcoming: Match[] }> => buildMatches(teamId),
   listArticles: async (limit?: number): Promise<Article[]> =>
     typeof limit === "number" ? ARTICLES.slice(0, limit) : ARTICLES,
+  listArticlesByCategory: async (
+    category: ArticleCategory,
+    limit?: number,
+  ): Promise<Article[]> => {
+    const items = ARTICLES.filter((article) => article.category === category);
+    return typeof limit === "number" ? items.slice(0, limit) : items;
+  },
   listVideos: async (limit?: number): Promise<Video[]> =>
     typeof limit === "number" ? VIDEOS.slice(0, limit) : VIDEOS,
 };
