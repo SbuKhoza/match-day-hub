@@ -1,4 +1,5 @@
 import { Check, Minus, Plus } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ export function PlayerRow({
   selected?: boolean;
   disabled?: boolean;
   onToggle?: (player: Player) => void;
-  trailing?: React.ReactNode;
+  trailing?: ReactNode;
 }) {
   const club = getTeam(player.clubId);
   const Icon = selected ? Minus : Plus;
