@@ -2,21 +2,70 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
     // A user profile document is private to its owner.
     match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
 
-      // Owner may create their own profile once, with their own uid.
-      allow create: if request.auth != null
+      allow create: if signedIn()
                     && request.auth.uid == uid
                     && request.resource.data.uid == uid;
 
-      // Owner may update their own profile, but never reassign ownership.
-      allow update: if request.auth != null
+      allow update: if signedIn()
                     && request.auth.uid == uid
                     && request.resource.data.uid == resource.data.uid;
 
       allow delete: if false;
+    }
+
+    // Fantasy squads: readable by any signed-in user (league tables), writable by the owner.
+    match /fantasyTeams/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && request.resource.data.uid == uid;
+      allow delete: if false;
+    }
+
+    // Reference data: read-only from the client, written by an admin/back office.
+    match /players/{playerId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /gameweeks/{gameweekId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /playerPoints/{entryId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Mini-leagues: members read; anyone signed in may look up by invite code to join.
+    match /leagues/{leagueId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.memberUids == [request.auth.uid];
+      // Members may only add or remove themselves; league metadata stays fixed.
+      allow update: if signedIn()
+                    && request.resource.data.name == resource.data.name
+                    && request.resource.data.code == resource.data.code
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && request.resource.data.memberUids.hasOnly(resource.data.memberUids.concat([request.auth.uid]))
+                    && resource.data.memberUids.hasOnly(request.resource.data.memberUids.concat([request.auth.uid]));
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /transfers/{transferId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /{document=**} {

@@ -17,6 +17,12 @@ import { Route as NewsRouteImport } from './routes/news'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as VideosRouteImport } from './routes/videos'
+import { Route as FantasyIndexRouteImport } from './routes/fantasy.index'
+import { Route as FantasyPointsRouteImport } from './routes/fantasy.points'
+import { Route as FantasyTeamRouteImport } from './routes/fantasy.team'
+import { Route as FantasyTransfersRouteImport } from './routes/fantasy.transfers'
+import { Route as FantasyLeaguesIndexRouteImport } from './routes/fantasy.leagues.index'
+import { Route as FantasyLeaguesLeagueIdRouteImport } from './routes/fantasy.leagues.$leagueId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,37 +64,84 @@ const VideosRoute = VideosRouteImport.update({
   path: '/videos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FantasyIndexRoute = FantasyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FantasyRoute,
+} as any)
+const FantasyPointsRoute = FantasyPointsRouteImport.update({
+  id: '/points',
+  path: '/points',
+  getParentRoute: () => FantasyRoute,
+} as any)
+const FantasyTeamRoute = FantasyTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => FantasyRoute,
+} as any)
+const FantasyTransfersRoute = FantasyTransfersRouteImport.update({
+  id: '/transfers',
+  path: '/transfers',
+  getParentRoute: () => FantasyRoute,
+} as any)
+const FantasyLeaguesIndexRoute = FantasyLeaguesIndexRouteImport.update({
+  id: '/leagues/',
+  path: '/leagues/',
+  getParentRoute: () => FantasyRoute,
+} as any)
+const FantasyLeaguesLeagueIdRoute = FantasyLeaguesLeagueIdRouteImport.update({
+  id: '/leagues/$leagueId',
+  path: '/leagues/$leagueId',
+  getParentRoute: () => FantasyRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/fantasy': typeof FantasyRoute
+  '/fantasy': typeof FantasyRouteWithChildren
   '/match-center': typeof MatchCenterRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
+  '/fantasy/points': typeof FantasyPointsRoute
+  '/fantasy/team': typeof FantasyTeamRoute
+  '/fantasy/transfers': typeof FantasyTransfersRoute
+  '/fantasy/': typeof FantasyIndexRoute
+  '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
+  '/fantasy/leagues/': typeof FantasyLeaguesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/fantasy': typeof FantasyRoute
   '/match-center': typeof MatchCenterRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
+  '/fantasy/points': typeof FantasyPointsRoute
+  '/fantasy/team': typeof FantasyTeamRoute
+  '/fantasy/transfers': typeof FantasyTransfersRoute
+  '/fantasy': typeof FantasyIndexRoute
+  '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
+  '/fantasy/leagues': typeof FantasyLeaguesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/fantasy': typeof FantasyRoute
+  '/fantasy': typeof FantasyRouteWithChildren
   '/match-center': typeof MatchCenterRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
+  '/fantasy/points': typeof FantasyPointsRoute
+  '/fantasy/team': typeof FantasyTeamRoute
+  '/fantasy/transfers': typeof FantasyTransfersRoute
+  '/fantasy/': typeof FantasyIndexRoute
+  '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
+  '/fantasy/leagues/': typeof FantasyLeaguesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,16 +154,27 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/videos'
+    | '/fantasy/points'
+    | '/fantasy/team'
+    | '/fantasy/transfers'
+    | '/fantasy/'
+    | '/fantasy/leagues/$leagueId'
+    | '/fantasy/leagues/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/fantasy'
     | '/match-center'
     | '/news'
     | '/onboarding'
     | '/profile'
     | '/videos'
+    | '/fantasy/points'
+    | '/fantasy/team'
+    | '/fantasy/transfers'
+    | '/fantasy'
+    | '/fantasy/leagues/$leagueId'
+    | '/fantasy/leagues'
   id:
     | '__root__'
     | '/'
@@ -121,12 +185,18 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/videos'
+    | '/fantasy/points'
+    | '/fantasy/team'
+    | '/fantasy/transfers'
+    | '/fantasy/'
+    | '/fantasy/leagues/$leagueId'
+    | '/fantasy/leagues/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  FantasyRoute: typeof FantasyRoute
+  FantasyRoute: typeof FantasyRouteWithChildren
   MatchCenterRoute: typeof MatchCenterRoute
   NewsRoute: typeof NewsRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -192,13 +262,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VideosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fantasy/': {
+      id: '/fantasy/'
+      path: '/'
+      fullPath: '/fantasy/'
+      preLoaderRoute: typeof FantasyIndexRouteImport
+      parentRoute: typeof FantasyRoute
+    }
+    '/fantasy/points': {
+      id: '/fantasy/points'
+      path: '/points'
+      fullPath: '/fantasy/points'
+      preLoaderRoute: typeof FantasyPointsRouteImport
+      parentRoute: typeof FantasyRoute
+    }
+    '/fantasy/team': {
+      id: '/fantasy/team'
+      path: '/team'
+      fullPath: '/fantasy/team'
+      preLoaderRoute: typeof FantasyTeamRouteImport
+      parentRoute: typeof FantasyRoute
+    }
+    '/fantasy/transfers': {
+      id: '/fantasy/transfers'
+      path: '/transfers'
+      fullPath: '/fantasy/transfers'
+      preLoaderRoute: typeof FantasyTransfersRouteImport
+      parentRoute: typeof FantasyRoute
+    }
+    '/fantasy/leagues/': {
+      id: '/fantasy/leagues/'
+      path: '/leagues'
+      fullPath: '/fantasy/leagues/'
+      preLoaderRoute: typeof FantasyLeaguesIndexRouteImport
+      parentRoute: typeof FantasyRoute
+    }
+    '/fantasy/leagues/$leagueId': {
+      id: '/fantasy/leagues/$leagueId'
+      path: '/leagues/$leagueId'
+      fullPath: '/fantasy/leagues/$leagueId'
+      preLoaderRoute: typeof FantasyLeaguesLeagueIdRouteImport
+      parentRoute: typeof FantasyRoute
+    }
   }
 }
+
+interface FantasyRouteChildren {
+  FantasyPointsRoute: typeof FantasyPointsRoute
+  FantasyTeamRoute: typeof FantasyTeamRoute
+  FantasyTransfersRoute: typeof FantasyTransfersRoute
+  FantasyIndexRoute: typeof FantasyIndexRoute
+  FantasyLeaguesLeagueIdRoute: typeof FantasyLeaguesLeagueIdRoute
+  FantasyLeaguesIndexRoute: typeof FantasyLeaguesIndexRoute
+}
+
+const FantasyRouteChildren: FantasyRouteChildren = {
+  FantasyPointsRoute: FantasyPointsRoute,
+  FantasyTeamRoute: FantasyTeamRoute,
+  FantasyTransfersRoute: FantasyTransfersRoute,
+  FantasyIndexRoute: FantasyIndexRoute,
+  FantasyLeaguesLeagueIdRoute: FantasyLeaguesLeagueIdRoute,
+  FantasyLeaguesIndexRoute: FantasyLeaguesIndexRoute,
+}
+
+const FantasyRouteWithChildren =
+  FantasyRoute._addFileChildren(FantasyRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  FantasyRoute: FantasyRoute,
+  FantasyRoute: FantasyRouteWithChildren,
   MatchCenterRoute: MatchCenterRoute,
   NewsRoute: NewsRoute,
   OnboardingRoute: OnboardingRoute,
