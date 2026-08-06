@@ -31,6 +31,7 @@ export function ordinal(n: number): string {
   const v = n % 100;
   return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]!);
 }
+
 /** South African Rand, compact for fantasy prices (R6.5m). */
 export function formatRand(amount: number): string {
   if (Math.abs(amount) >= 1_000_000) return `R${(amount / 1_000_000).toFixed(1)}m`;
