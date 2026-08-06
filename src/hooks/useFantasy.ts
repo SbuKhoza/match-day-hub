@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useLive } from "@/hooks/useLive";
 import {
   fetchCurrentGameweek,
   fetchFantasyTeam,
@@ -79,10 +81,28 @@ export function useGameweek() {
 
 export function usePlayerPoints(gameweek?: number) {
   const { db } = useFantasyDb();
-  return useQuery({
+  const { livePoints, lastUpdated } = useLive();
+  const query = useQuery({
     queryKey: ["fantasy", "playerPoints", gameweek ?? "all"],
     queryFn: () => listPlayerPoints(db!, gameweek),
     enabled: Boolean(db),
     refetchInterval: 60_000,
   });
+
+  // Stored points are merged with the in-memory live feed so a goal scored during a
+  // match updates fantasy scoring immediately, without a refetch or page refresh.
+  const data = useMemo(() => {
+    const stored = query.data ?? [];
+    const merged = new Map(stored.map((entry) => [`${entry.gameweek}-${entry.playerId}`, entry]));
+    for (const entry of livePoints) {
+      if (typeof gameweek === "number" && entry.gameweek !== gameweek) continue;
+      const key = `${entry.gameweek}-${entry.playerId}`;
+      const existing = merged.get(key);
+      merged.set(key, existing ? { ...existing, ...entry, points: existing.points + entry.points } : entry);
+    }
+    return [...merged.values()];
+    // lastUpdated keeps the memo in step with each live tick
+  }, [query.data, livePoints, gameweek, lastUpdated]);
+
+  return { ...query, data };
 }
