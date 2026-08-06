@@ -32,7 +32,7 @@ export function MatchCard({ match }: { match: Match }) {
             params={{ teamId: match.home.id }}
             className="flex min-w-0 flex-1 items-center gap-2 hover:underline"
           >
-            <TeamBadge team={{ ...match.home, primary: home?.primary }} size="sm" />
+            <TeamBadge team={{ ...match.home, ...(home?.primary ? { primary: home.primary } : {}) }} size="sm" />
             <span className="truncate text-sm font-medium">{match.home.name}</span>
           </Link>
           <span className="shrink-0 text-lg font-semibold tabular-nums">
@@ -44,7 +44,7 @@ export function MatchCard({ match }: { match: Match }) {
             className="flex min-w-0 flex-1 items-center justify-end gap-2 hover:underline"
           >
             <span className="truncate text-right text-sm font-medium">{match.away.name}</span>
-            <TeamBadge team={{ ...match.away, primary: away?.primary }} size="sm" />
+            <TeamBadge team={{ ...match.away, ...(away?.primary ? { primary: away.primary } : {}) }} size="sm" />
           </Link>
         </div>
       </CardBody>
