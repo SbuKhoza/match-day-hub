@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/fantasy/EmptyState";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { StatTile } from "@/components/fantasy/StatTile";
+import { useQuietLiveUpdates } from "@/hooks/useLive";
 import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers, useTransfers } from "@/hooks/useFantasy";
 import { recordTransfer, saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { getPlayer } from "@/services/playerPool";
@@ -16,6 +17,10 @@ import { SQUAD_RULES, type Player } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
 export function TransfersScreen() {
+  // Live match syncing keeps running in the background, but it must never re-render
+  // the squad you are actively editing.
+  useQuietLiveUpdates();
+
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: team } = useFantasyTeam();

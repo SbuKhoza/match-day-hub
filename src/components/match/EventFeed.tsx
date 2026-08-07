@@ -6,7 +6,13 @@ import { getTeam } from "@/services/mockData";
 const ICONS = { goal: CircleDot, assist: Zap, yellow: Square, red: Square } as const;
 const LABELS = { goal: "Goal", assist: "Assist", yellow: "Yellow card", red: "Red card" } as const;
 
-export function EventFeed({ events }: { events: LiveEvent[] }) {
+export function EventFeed({
+  events,
+  onSelectPlayer,
+}: {
+  events: LiveEvent[];
+  onSelectPlayer?: ((playerId: string) => void) | undefined;
+}) {
   if (events.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -27,7 +33,13 @@ export function EventFeed({ events }: { events: LiveEvent[] }) {
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary">
               <Icon className="h-3.5 w-3.5" />
             </span>
-            <span className="min-w-0 flex-1 truncate font-medium">{event.playerName}</span>
+            <button
+              type="button"
+              onClick={() => onSelectPlayer?.(event.playerId)}
+              className="min-w-0 flex-1 truncate text-left font-medium hover:underline"
+            >
+              {event.playerName}
+            </button>
             <span className="truncate text-xs text-muted-foreground">
               {LABELS[event.type]} · {getTeam(event.teamId)?.shortName ?? ""}
             </span>

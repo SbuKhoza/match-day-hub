@@ -68,7 +68,7 @@ export interface PlayerPoints {
 }
 
 export const SQUAD_RULES = {
-  budget: 100_000_000,
+  budget: 220_000_000,
   maxPerClub: 3,
   starters: 11,
   positions: { GK: 2, DEF: 6, MID: 6, FWD: 3 } as Record<PlayerPosition, number>,

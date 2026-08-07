@@ -4,6 +4,8 @@ import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventFeed } from "@/components/match/EventFeed";
 import { MatchCard } from "@/components/match/MatchCard";
+import { MatchTimeline } from "@/components/match/MatchTimeline";
+import { PlayerDetailsDrawer } from "@/components/match/PlayerDetailsDrawer";
 import { StandingsTable } from "@/components/match/StandingsTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useLive } from "@/hooks/useLive";
@@ -16,6 +18,7 @@ export function MatchCenterScreen() {
   const { profile } = useAuth();
   const { matches, events, table } = useLive();
   const [tab, setTab] = useState<Tab>("Live");
+  const [playerId, setPlayerId] = useState<string | null>(null);
 
   const live = matches.filter((m) => m.status === "live");
   const results = matches
@@ -55,7 +58,19 @@ export function MatchCenterScreen() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-3 sm:grid-cols-2">
             {live.length > 0 ? (
-              live.map((match) => <MatchCard key={match.id} match={match} />)
+              live.map((match) => (
+                <div key={match.id} className="space-y-2">
+                  <MatchCard match={match} />
+                  <Card>
+                    <CardBody className="space-y-2 p-4">
+                      <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                        Timeline
+                      </h3>
+                      <MatchTimeline matchId={match.id} onSelectPlayer={setPlayerId} />
+                    </CardBody>
+                  </Card>
+                </div>
+              ))
             ) : (
               <Card>
                 <CardBody className="text-sm text-muted-foreground">
@@ -67,7 +82,7 @@ export function MatchCenterScreen() {
           <Card>
             <CardBody className="space-y-3 p-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide">Live feed</h2>
-              <EventFeed events={events} />
+              <EventFeed events={events} onSelectPlayer={setPlayerId} />
             </CardBody>
           </Card>
         </div>
@@ -96,6 +111,8 @@ export function MatchCenterScreen() {
           </CardBody>
         </Card>
       ) : null}
+
+      <PlayerDetailsDrawer playerId={playerId} onClose={() => setPlayerId(null)} />
     </div>
   );
 }

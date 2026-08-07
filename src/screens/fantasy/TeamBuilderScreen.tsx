@@ -9,6 +9,7 @@ import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/Play
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { SquadList } from "@/components/fantasy/SquadList";
 import { StatTile } from "@/components/fantasy/StatTile";
+import { useQuietLiveUpdates } from "@/hooks/useLive";
 import { useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
@@ -17,6 +18,10 @@ import { formatRand } from "@/utils/format";
 const POSITION_ORDER: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
 
 export function TeamBuilderScreen() {
+  // Live match syncing keeps running in the background, but it must never re-render
+  // the squad you are actively editing.
+  useQuietLiveUpdates();
+
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: players = [] } = usePlayers();
@@ -108,7 +113,7 @@ export function TeamBuilderScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Team builder" subtitle="Budget R100.0m · 17 players · max 3 per club." />
+      <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Remaining budget" value={formatRand(validation.remaining)} />

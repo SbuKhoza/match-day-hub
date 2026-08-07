@@ -83,7 +83,7 @@ export function FantasyScreen() {
               <EmptyState
                 icon={Users}
                 title="No squad yet"
-                description="Pick 17 players inside your R100.0m budget to enter this season."
+                description="Pick 17 players inside your R220.0m budget to enter this season."
                 action={
                   <Link
                     to="/fantasy/team"

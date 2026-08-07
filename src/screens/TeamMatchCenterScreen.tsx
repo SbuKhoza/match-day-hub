@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { Card, CardBody } from "@/components/common/Card";
@@ -6,6 +7,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { EventFeed } from "@/components/match/EventFeed";
 import { MatchCard } from "@/components/match/MatchCard";
+import { MatchTimeline } from "@/components/match/MatchTimeline";
+import { PlayerDetailsDrawer } from "@/components/match/PlayerDetailsDrawer";
 import { StandingsTable } from "@/components/match/StandingsTable";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { useLive } from "@/hooks/useLive";
@@ -16,6 +19,7 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
   const { table } = useLive();
   const team = getTeam(teamId);
   const season = useTeamSeason(teamId);
+  const [playerId, setPlayerId] = useState<string | null>(null);
 
   if (!team) {
     return (
@@ -57,7 +61,17 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
           <h2 className="text-lg font-semibold">Live now</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {season.live.map((match) => (
-              <MatchCard key={match.id} match={match} />
+              <div key={match.id} className="space-y-2">
+                <MatchCard match={match} />
+                <Card>
+                  <CardBody className="space-y-2 p-4">
+                    <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      Timeline
+                    </h3>
+                    <MatchTimeline matchId={match.id} onSelectPlayer={setPlayerId} />
+                  </CardBody>
+                </Card>
+              </div>
             ))}
           </div>
         </section>
@@ -67,7 +81,7 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
         <h2 className="text-lg font-semibold">Live feed</h2>
         <Card>
           <CardBody className="p-4">
-            <EventFeed events={season.events} />
+            <EventFeed events={season.events} onSelectPlayer={setPlayerId} />
           </CardBody>
         </Card>
       </section>
@@ -98,6 +112,8 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
           </CardBody>
         </Card>
       </section>
+
+      <PlayerDetailsDrawer playerId={playerId} onClose={() => setPlayerId(null)} />
     </div>
   );
 }
