@@ -3,7 +3,16 @@ import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
-  const queryClient = new QueryClient();
+  // Background refetches must never interrupt what the user is doing (e.g. picking a squad).
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        placeholderData: <T,>(previous: T) => previous,
+      },
+    },
+  });
 
   const router = createRouter({
     routeTree,
