@@ -9,7 +9,6 @@ export const getRouter = () => {
       queries: {
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        placeholderData: <T,>(previous: T) => previous,
       },
     },
   });

@@ -13,7 +13,7 @@ export function MatchTimelineRow({
   onSelectPlayer,
 }: {
   event: LiveEvent;
-  onSelectPlayer?: (playerId: string) => void;
+  onSelectPlayer?: ((playerId: string) => void) | undefined;
 }) {
   const Icon = ICONS[event.type];
   return (
@@ -54,7 +54,7 @@ export function MatchTimeline({
   onSelectPlayer,
 }: {
   matchId: string;
-  onSelectPlayer?: (playerId: string) => void;
+  onSelectPlayer?: ((playerId: string) => void) | undefined;
 }) {
   const events = useMatchTimeline(matchId);
 

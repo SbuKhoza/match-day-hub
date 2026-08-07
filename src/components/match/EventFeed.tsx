@@ -11,7 +11,7 @@ export function EventFeed({
   onSelectPlayer,
 }: {
   events: LiveEvent[];
-  onSelectPlayer?: (playerId: string) => void;
+  onSelectPlayer?: ((playerId: string) => void) | undefined;
 }) {
   if (events.length === 0) {
     return (
