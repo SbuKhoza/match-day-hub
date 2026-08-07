@@ -9,6 +9,7 @@ import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/Play
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { SquadList } from "@/components/fantasy/SquadList";
 import { StatTile } from "@/components/fantasy/StatTile";
+import { useQuietLiveUpdates } from "@/hooks/useLive";
 import { useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
@@ -17,6 +18,10 @@ import { formatRand } from "@/utils/format";
 const POSITION_ORDER: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
 
 export function TeamBuilderScreen() {
+  // Live match syncing keeps running in the background, but it must never re-render
+  // the squad you are actively editing.
+  useQuietLiveUpdates();
+
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: players = [] } = usePlayers();
