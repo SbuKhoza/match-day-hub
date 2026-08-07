@@ -46,6 +46,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Shared live match state (scores, timeline events, live fantasy points).
+    // Any signed-in client may read it; the tab acting as live engine writes it.
+    match /live/{docId} {
+      allow read, write: if signedIn();
+    }
+
     // Mini-leagues: members read; anyone signed in may look up by invite code to join.
     match /leagues/{leagueId} {
       allow read: if signedIn();
