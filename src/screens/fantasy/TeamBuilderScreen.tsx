@@ -108,7 +108,7 @@ export function TeamBuilderScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Team builder" subtitle="Budget R100.0m · 17 players · max 3 per club." />
+      <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Remaining budget" value={formatRand(validation.remaining)} />
