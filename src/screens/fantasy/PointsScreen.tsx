@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/fantasy/EmptyState";
+import { PointsAuditTrail } from "@/components/fantasy/PointsAuditTrail";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { cn } from "@/lib/utils";
 import { useFantasyTeam, useGameweek, usePlayerPoints } from "@/hooks/useFantasy";
