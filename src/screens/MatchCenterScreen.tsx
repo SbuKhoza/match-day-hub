@@ -132,10 +132,87 @@ export function MatchCenterScreen() {
       ) : null}
 
       {tab === "Fixtures" ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {fixtures.map((match) => (
-            <MatchCard key={match.id} match={match} />
-          ))}
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border p-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="filter-status" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Status
+              </label>
+              <select
+                id="filter-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              >
+                {STATUS_FILTERS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="filter-competition" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Competition
+              </label>
+              <select
+                id="filter-competition"
+                value={competition}
+                onChange={(e) => setCompetition(e.target.value)}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              >
+                {competitions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="filter-kickoff" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Kickoff
+              </label>
+              <select
+                id="filter-kickoff"
+                value={kickoff}
+                onChange={(e) => setKickoff(e.target.value as KickoffFilter)}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              >
+                {KICKOFF_FILTERS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setStatus("All");
+                setCompetition("All");
+                setKickoff("Any time");
+              }}
+              className="rounded-xl border border-border px-3 py-2 text-sm font-medium hover:bg-secondary"
+            >
+              Reset
+            </button>
+            <span className="ml-auto text-xs text-muted-foreground" role="status">
+              {fixtures.length} match{fixtures.length === 1 ? "" : "es"}
+            </span>
+          </div>
+          {fixtures.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {fixtures.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardBody className="text-sm text-muted-foreground">
+                No fixtures match these filters.
+              </CardBody>
+            </Card>
+          )}
         </div>
       ) : null}
 
