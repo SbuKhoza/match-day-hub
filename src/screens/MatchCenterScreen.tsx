@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -6,6 +6,7 @@ import { EventFeed } from "@/components/match/EventFeed";
 import { MatchCard } from "@/components/match/MatchCard";
 import { MatchTimeline } from "@/components/match/MatchTimeline";
 import { PlayerDetailsDrawer } from "@/components/match/PlayerDetailsDrawer";
+import { PlayerSearch } from "@/components/match/PlayerSearch";
 import { StandingsTable } from "@/components/match/StandingsTable";
 import { useAuth } from "@/hooks/useAuth";
 import { useLive } from "@/hooks/useLive";
@@ -14,11 +15,43 @@ import { cn } from "@/lib/utils";
 const TABS = ["Live", "Results", "Fixtures", "Table"] as const;
 type Tab = (typeof TABS)[number];
 
+const STATUS_FILTERS = ["All", "Live", "Upcoming", "Finished"] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+const KICKOFF_FILTERS = ["Any time", "Today", "Next 7 days"] as const;
+type KickoffFilter = (typeof KICKOFF_FILTERS)[number];
+
 export function MatchCenterScreen() {
   const { profile } = useAuth();
   const { matches, events, table } = useLive();
   const [tab, setTab] = useState<Tab>("Live");
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [status, setStatus] = useState<StatusFilter>("All");
+  const [competition, setCompetition] = useState<string>("All");
+  const [kickoff, setKickoff] = useState<KickoffFilter>("Any time");
+
+  const competitions = useMemo(
+    () => ["All", ...new Set(matches.map((m) => m.competition))],
+    [matches],
+  );
+
+  const matchesFilter = (match: (typeof matches)[number]) => {
+    if (status === "Live" && match.status !== "live") return false;
+    if (status === "Upcoming" && match.status !== "upcoming") return false;
+    if (status === "Finished" && match.status !== "finished") return false;
+    if (competition !== "All" && match.competition !== competition) return false;
+    if (kickoff !== "Any time") {
+      const time = new Date(match.kickoff).getTime();
+      const now = Date.now();
+      if (kickoff === "Today") {
+        const day = new Date().toDateString();
+        if (new Date(match.kickoff).toDateString() !== day) return false;
+      } else if (time < now || time > now + 7 * 24 * 60 * 60 * 1000) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   const live = matches.filter((m) => m.status === "live");
   const results = matches
@@ -26,7 +59,7 @@ export function MatchCenterScreen() {
     .sort((a, b) => b.kickoff.localeCompare(a.kickoff))
     .slice(0, 24);
   const fixtures = matches
-    .filter((m) => m.status === "upcoming")
+    .filter((m) => m.status === "upcoming" && matchesFilter(m))
     .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
     .slice(0, 24);
 
@@ -36,6 +69,8 @@ export function MatchCenterScreen() {
         title="Match Center"
         subtitle="Live games, results, fixtures and the league table for every club."
       />
+
+      <PlayerSearch onSelectPlayer={setPlayerId} />
 
       <div className="flex flex-wrap gap-2">
         {TABS.map((item) => (
