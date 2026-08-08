@@ -59,7 +59,7 @@ export function MatchCenterScreen() {
     .sort((a, b) => b.kickoff.localeCompare(a.kickoff))
     .slice(0, 24);
   const fixtures = matches
-    .filter((m) => m.status === "upcoming" && matchesFilter(m))
+    .filter((m) => (status === "All" ? m.status === "upcoming" : true) && matchesFilter(m))
     .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
     .slice(0, 24);
 
