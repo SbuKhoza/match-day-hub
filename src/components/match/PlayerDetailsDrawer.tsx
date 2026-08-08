@@ -1,4 +1,10 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { usePlayerLive } from "@/hooks/useLive";
 import { getTeam } from "@/services/mockData";
 import { SCORING_RULES } from "@/services/scoringService";
@@ -34,13 +40,28 @@ export function PlayerDetailsDrawer({
 
   return (
     <Sheet open={Boolean(playerId)} onOpenChange={(open) => (!open ? onClose() : undefined)}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="w-full overflow-y-auto sm:max-w-md"
+        aria-label={player ? `${player.name} live stats and fantasy impact` : "Player details"}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement)
+            .querySelector<HTMLElement>("[data-drawer-focus]")
+            ?.focus();
+        }}
+      >
         <SheetHeader>
           <SheetTitle>{player?.name ?? "Player"}</SheetTitle>
+          <SheetDescription>
+            {player
+              ? `Live per-match stats and fantasy points impact for ${player.name}. Press Escape to close.`
+              : "Live per-match stats and fantasy points impact."}
+          </SheetDescription>
         </SheetHeader>
 
         {player ? (
-          <div className="space-y-6 px-4 pb-8">
+          <div className="space-y-6 px-4 pb-8 focus:outline-none" tabIndex={-1} data-drawer-focus>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="rounded-full bg-secondary px-2.5 py-1 font-medium text-foreground">
                 {player.position}
@@ -50,11 +71,15 @@ export function PlayerDetailsDrawer({
               <span>{formatRand(player.price)}</span>
             </div>
 
-            <div className="rounded-2xl border border-border p-4">
+            <div className="rounded-2xl border border-border p-4" role="status" aria-live="polite">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
                 Gameweek fantasy points
               </p>
-              <p className="text-3xl font-semibold tabular-nums">{detail?.points?.points ?? 0}</p>
+              <p className="text-3xl font-semibold tabular-nums">
+                <span className="sr-only">{player.name} has </span>
+                {detail?.points?.points ?? 0}
+                <span className="sr-only"> fantasy points this gameweek</span>
+              </p>
             </div>
 
             <section className="space-y-3">

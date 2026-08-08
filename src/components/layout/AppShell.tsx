@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { useFavoriteTeamAlerts } from "@/hooks/useFavoriteTeamAlerts";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  useFavoriteTeamAlerts();
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
