@@ -61,11 +61,7 @@ export function PlayerDetailsDrawer({
         </SheetHeader>
 
         {player ? (
-          <div
-            className="space-y-6 px-4 pb-8 focus:outline-none"
-            tabIndex={-1}
-            data-drawer-focus
-          >
+          <div className="space-y-6 px-4 pb-8 focus:outline-none" tabIndex={-1} data-drawer-focus>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="rounded-full bg-secondary px-2.5 py-1 font-medium text-foreground">
                 {player.position}

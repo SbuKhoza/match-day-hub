@@ -34,7 +34,8 @@ export function useFavoriteTeamAlerts() {
       const description = `${event.minute}' · ${club} ${event.homeScore}–${event.awayScore}`;
       if (event.type === "goal") toast.success(`⚽ Goal — ${event.playerName}`, { description });
       else if (event.type === "assist") toast(`Assist — ${event.playerName}`, { description });
-      else if (event.type === "yellow") toast.warning(`Yellow card — ${event.playerName}`, { description });
+      else if (event.type === "yellow")
+        toast.warning(`Yellow card — ${event.playerName}`, { description });
       else toast.error(`Red card — ${event.playerName}`, { description });
     }
   }, [events, favorite]);

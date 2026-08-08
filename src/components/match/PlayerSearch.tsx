@@ -45,7 +45,9 @@ export function PlayerSearch({ onSelectPlayer }: { onSelectPlayer: (playerId: st
           aria-expanded={results.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
-          aria-activedescendant={results[active] ? `${listId}-opt-${results[active].id}` : undefined}
+          aria-activedescendant={
+            results[active] ? `${listId}-opt-${results[active].id}` : undefined
+          }
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);

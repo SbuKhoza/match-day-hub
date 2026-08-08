@@ -135,7 +135,10 @@ export function MatchCenterScreen() {
         <div className="space-y-4">
           <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border p-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor="filter-status" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              <label
+                htmlFor="filter-status"
+                className="text-[11px] uppercase tracking-widest text-muted-foreground"
+              >
                 Status
               </label>
               <select
@@ -152,7 +155,10 @@ export function MatchCenterScreen() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="filter-competition" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              <label
+                htmlFor="filter-competition"
+                className="text-[11px] uppercase tracking-widest text-muted-foreground"
+              >
                 Competition
               </label>
               <select
@@ -169,7 +175,10 @@ export function MatchCenterScreen() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="filter-kickoff" className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              <label
+                htmlFor="filter-kickoff"
+                className="text-[11px] uppercase tracking-widest text-muted-foreground"
+              >
                 Kickoff
               </label>
               <select
