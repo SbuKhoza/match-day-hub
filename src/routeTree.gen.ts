@@ -23,6 +23,8 @@ import { Route as FantasyTeamRouteImport } from './routes/fantasy.team'
 import { Route as FantasyTransfersRouteImport } from './routes/fantasy.transfers'
 import { Route as MatchCenterIndexRouteImport } from './routes/match-center.index'
 import { Route as MatchCenterTeamIdRouteImport } from './routes/match-center.$teamId'
+import { Route as PlayersIndexRouteImport } from './routes/players.index'
+import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as FantasyLeaguesIndexRouteImport } from './routes/fantasy.leagues.index'
 import { Route as FantasyLeaguesLeagueIdRouteImport } from './routes/fantasy.leagues.$leagueId'
 
@@ -96,6 +98,16 @@ const MatchCenterTeamIdRoute = MatchCenterTeamIdRouteImport.update({
   path: '/$teamId',
   getParentRoute: () => MatchCenterRoute,
 } as any)
+const PlayersIndexRoute = PlayersIndexRouteImport.update({
+  id: '/players/',
+  path: '/players/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
+  id: '/players/$playerId',
+  path: '/players/$playerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FantasyLeaguesIndexRoute = FantasyLeaguesIndexRouteImport.update({
   id: '/leagues/',
   path: '/leagues/',
@@ -120,8 +132,10 @@ export interface FileRoutesByFullPath {
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
   '/match-center/$teamId': typeof MatchCenterTeamIdRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/fantasy/': typeof FantasyIndexRoute
   '/match-center/': typeof MatchCenterIndexRoute
+  '/players/': typeof PlayersIndexRoute
   '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
   '/fantasy/leagues/': typeof FantasyLeaguesIndexRoute
 }
@@ -136,8 +150,10 @@ export interface FileRoutesByTo {
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
   '/match-center/$teamId': typeof MatchCenterTeamIdRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/fantasy': typeof FantasyIndexRoute
   '/match-center': typeof MatchCenterIndexRoute
+  '/players': typeof PlayersIndexRoute
   '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
   '/fantasy/leagues': typeof FantasyLeaguesIndexRoute
 }
@@ -155,8 +171,10 @@ export interface FileRoutesById {
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
   '/match-center/$teamId': typeof MatchCenterTeamIdRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/fantasy/': typeof FantasyIndexRoute
   '/match-center/': typeof MatchCenterIndexRoute
+  '/players/': typeof PlayersIndexRoute
   '/fantasy/leagues/$leagueId': typeof FantasyLeaguesLeagueIdRoute
   '/fantasy/leagues/': typeof FantasyLeaguesIndexRoute
 }
@@ -175,8 +193,10 @@ export interface FileRouteTypes {
     | '/fantasy/team'
     | '/fantasy/transfers'
     | '/match-center/$teamId'
+    | '/players/$playerId'
     | '/fantasy/'
     | '/match-center/'
+    | '/players/'
     | '/fantasy/leagues/$leagueId'
     | '/fantasy/leagues/'
   fileRoutesByTo: FileRoutesByTo
@@ -191,8 +211,10 @@ export interface FileRouteTypes {
     | '/fantasy/team'
     | '/fantasy/transfers'
     | '/match-center/$teamId'
+    | '/players/$playerId'
     | '/fantasy'
     | '/match-center'
+    | '/players'
     | '/fantasy/leagues/$leagueId'
     | '/fantasy/leagues'
   id:
@@ -209,8 +231,10 @@ export interface FileRouteTypes {
     | '/fantasy/team'
     | '/fantasy/transfers'
     | '/match-center/$teamId'
+    | '/players/$playerId'
     | '/fantasy/'
     | '/match-center/'
+    | '/players/'
     | '/fantasy/leagues/$leagueId'
     | '/fantasy/leagues/'
   fileRoutesById: FileRoutesById
@@ -224,6 +248,8 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   VideosRoute: typeof VideosRoute
+  PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
+  PlayersIndexRoute: typeof PlayersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -326,6 +352,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchCenterTeamIdRouteImport
       parentRoute: typeof MatchCenterRoute
     }
+    '/players/': {
+      id: '/players/'
+      path: '/players'
+      fullPath: '/players/'
+      preLoaderRoute: typeof PlayersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/players/$playerId': {
+      id: '/players/$playerId'
+      path: '/players/$playerId'
+      fullPath: '/players/$playerId'
+      preLoaderRoute: typeof PlayersPlayerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fantasy/leagues/': {
       id: '/fantasy/leagues/'
       path: '/leagues'
@@ -387,6 +427,8 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   VideosRoute: VideosRoute,
+  PlayersPlayerIdRoute: PlayersPlayerIdRoute,
+  PlayersIndexRoute: PlayersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

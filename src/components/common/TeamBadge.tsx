@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import type { Team } from "@/types";
 
 const sizes = {
   sm: "h-9 w-9 text-[11px]",
@@ -8,12 +7,18 @@ const sizes = {
   xl: "h-20 w-20 text-xl",
 };
 
+export interface BadgeTeam {
+  name: string;
+  shortName?: string | null;
+  logo?: string | null;
+}
+
 export function TeamBadge({
   team,
   size = "md",
   className,
 }: {
-  team: Pick<Team, "shortName" | "name"> & { primary?: string };
+  team: BadgeTeam;
   size?: keyof typeof sizes;
   className?: string;
 }) {
@@ -21,17 +26,21 @@ export function TeamBadge({
     <span
       aria-label={team.name}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-2xl border border-border bg-secondary font-semibold tracking-tight text-secondary-foreground",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-secondary font-semibold tracking-tight text-secondary-foreground",
         sizes[size],
         className,
       )}
-      style={
-        team.primary
-          ? { boxShadow: `inset 0 -3px 0 0 ${team.primary}` }
-          : undefined
-      }
     >
-      {team.shortName}
+      {team.logo ? (
+        <img
+          src={team.logo}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-contain p-1.5"
+        />
+      ) : (
+        (team.shortName ?? team.name.slice(0, 3).toUpperCase())
+      )}
     </span>
   );
 }
