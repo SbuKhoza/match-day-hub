@@ -1,10 +1,13 @@
 export type PlayerPosition = "GK" | "DEF" | "MID" | "FWD";
 
+/** Selection view of an imported player, priced by this application. */
 export interface Player {
   id: string;
   name: string;
   position: PlayerPosition;
   clubId: string;
+  clubName: string;
+  clubShort: string | null;
   price: number;
   totalPoints: number;
   form: number;
