@@ -1,26 +1,17 @@
-import { ARTICLES, VIDEOS, buildMatches, getTeam, STANDING, TEAMS } from "./mockData";
-import type { Article, ArticleCategory, LeagueStanding, Match, Team, Video } from "@/types";
+import type { Article, ArticleCategory, Video } from "@/types";
 
 /**
- * Content layer. Swap these bodies for real API / Firestore reads later —
- * the components consume only these signatures.
+ * Editorial content layer.
+ *
+ * The previously bundled sample articles and videos were invented, so they have
+ * been removed. These reads return nothing until a real content source is
+ * connected, and the screens show empty states instead of made-up stories.
  */
 export const contentService = {
-  listTeams: async (): Promise<Team[]> => TEAMS,
-  getTeam: async (id: string | null): Promise<Team | undefined> => getTeam(id),
-  getStanding: async (teamId: string): Promise<LeagueStanding> => ({ ...STANDING, teamId }),
-  getTeamMatches: async (
-    teamId: string,
-  ): Promise<{ previous: Match; current: Match; upcoming: Match[] }> => buildMatches(teamId),
-  listArticles: async (limit?: number): Promise<Article[]> =>
-    typeof limit === "number" ? ARTICLES.slice(0, limit) : ARTICLES,
+  listArticles: async (_limit?: number): Promise<Article[]> => [],
   listArticlesByCategory: async (
-    category: ArticleCategory,
-    limit?: number,
-  ): Promise<Article[]> => {
-    const items = ARTICLES.filter((article) => article.category === category);
-    return typeof limit === "number" ? items.slice(0, limit) : items;
-  },
-  listVideos: async (limit?: number): Promise<Video[]> =>
-    typeof limit === "number" ? VIDEOS.slice(0, limit) : VIDEOS,
+    _category: ArticleCategory,
+    _limit?: number,
+  ): Promise<Article[]> => [],
+  listVideos: async (_limit?: number): Promise<Video[]> => [],
 };
