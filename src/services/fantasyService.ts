@@ -16,7 +16,6 @@ import {
   type Firestore,
 } from "firebase/firestore";
 
-import { PLAYERS, getPlayer } from "./playerPool";
 import type {
   FantasyTeam,
   Gameweek,
@@ -78,19 +77,6 @@ export function validateSquad(squad: Player[], starters: string[] = []): SquadVa
   return { valid: errors.length === 0, errors, spent, remaining: SQUAD_RULES.budget - spent, counts };
 }
 
-/* --------------------------------- players -------------------------------- */
-
-/** Reads the `players` collection, falling back to the bundled pool while it is empty. */
-export async function listPlayers(db: Firestore): Promise<Player[]> {
-  try {
-    const snapshot = await getDocs(collection(db, COLLECTIONS.players));
-    if (!snapshot.empty) return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Player);
-  } catch {
-    /* offline or rules — fall through to the local pool */
-  }
-  return PLAYERS;
-}
-
 /* ------------------------------ fantasy teams ----------------------------- */
 
 export async function fetchFantasyTeam(db: Firestore, uid: string): Promise<FantasyTeam | null> {
@@ -99,12 +85,14 @@ export async function fetchFantasyTeam(db: Firestore, uid: string): Promise<Fant
   return { uid, ...(snapshot.data() as Omit<FantasyTeam, "uid">) };
 }
 
+/** Saves a squad. `players` are the resolved imported players for the squad ids. */
 export async function saveFantasyTeam(
   db: Firestore,
   uid: string,
   input: Pick<FantasyTeam, "name" | "squad" | "starters" | "captainId" | "viceCaptainId">,
+  players: Player[],
+  gameweek: number,
 ): Promise<void> {
-  const players = input.squad.map(getPlayer).filter(Boolean) as Player[];
   const check = validateSquad(players, input.starters);
   if (!check.valid) throw new Error(check.errors[0] ?? "Invalid squad");
 
@@ -114,7 +102,7 @@ export async function saveFantasyTeam(
       uid,
       ...input,
       budgetSpent: check.spent,
-      gameweek: CURRENT_GAMEWEEK.number,
+      gameweek,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
