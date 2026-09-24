@@ -41,26 +41,53 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Reference data: read-only from the client, written by an admin/back office.
+    // Master data imported from the clubs/players export.
+    // Everyone signed in reads it; only administrators may write it.
+    match /teams/{teamId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
     match /players/{playerId} {
       allow read: if signedIn();
-      allow write: if false;
+      allow write: if isAdmin();
+    }
+
+    match /playerTransfers/{transferId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /dataImports/{importId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Football statistics stored from the data provider.
+    match /matches/{matchId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /matchEvents/{eventId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /playerMatchStats/{statId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
     match /gameweeks/{gameweekId} {
       allow read: if signedIn();
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /playerPoints/{entryId} {
       allow read: if signedIn();
-      allow write: if false;
-    }
-
-    // Shared live match state (scores, timeline events, live fantasy points).
-    // Any signed-in client may read it; the tab acting as live engine writes it.
-    match /live/{docId} {
-      allow read, write: if signedIn();
+      allow write: if isAdmin();
     }
 
     // Mini-leagues: members read; anyone signed in may look up by invite code to join.
