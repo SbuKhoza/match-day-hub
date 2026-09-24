@@ -130,7 +130,12 @@ export function TransfersScreen() {
             <h2 className="text-lg font-semibold">Transfer in</h2>
             {outPlayer ? (
               <>
-                <PlayerFilters value={filters} onChange={setFilters} priceCeiling={15_000_000} />
+                <PlayerFilters
+                  value={filters}
+                  onChange={setFilters}
+                  priceCeiling={PRICE_CEILING}
+                  clubs={clubs}
+                />
                 <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
                   {candidates.map((player) => (
                     <div key={player.id} className="flex items-center gap-2">
@@ -170,8 +175,8 @@ export function TransfersScreen() {
             <ul className="mt-3 space-y-2 text-sm">
               {transfers.map((transfer) => (
                 <li key={transfer.id} className="rounded-2xl border border-border px-3 py-2">
-                  GW {transfer.gameweek}: {getPlayer(transfer.outPlayerId)?.name ?? transfer.outPlayerId} →{" "}
-                  {getPlayer(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
+                  GW {transfer.gameweek}: {resolve(transfer.outPlayerId)?.name ?? transfer.outPlayerId} →{" "}
+                  {resolve(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
                 </li>
               ))}
             </ul>
