@@ -27,6 +27,7 @@ export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
   const { data: gameweek } = useGameweek();
   const { data: points = [] } = usePlayerPoints();
   const { data: transfers = [] } = useTransfers();
+  const { byId } = usePlayers();
   const [copied, setCopied] = useState(false);
 
   const gw = gameweek?.number ?? 0;
