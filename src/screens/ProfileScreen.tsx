@@ -8,7 +8,7 @@ import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { useAuth } from "@/hooks/useAuth";
-import { useTeams } from "@/hooks/useMasterData";
+import { useIsAdmin, useTeams } from "@/hooks/useMasterData";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { initials } from "@/utils/format";
@@ -17,6 +17,7 @@ export function ProfileScreen() {
   const { profile, user, logout, saveFavoriteTeam, savePreferredTheme } = useAuth();
   const { theme, setTheme } = useTheme();
   const { data: teams, isLoading } = useTeams();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [saving, setSaving] = useState<string | null>(null);
   const [teamStatus, setTeamStatus] = useState<string | null>(null);
