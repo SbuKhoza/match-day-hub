@@ -1,7 +1,6 @@
 import { Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { getTeam } from "@/services/mockData";
 import { formatRand } from "@/utils/format";
 import type { Player, PlayerPosition } from "@/types/fantasy";
 
