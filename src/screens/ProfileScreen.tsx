@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Check, LogOut } from "lucide-react";
 import { useState } from "react";
 
@@ -134,6 +134,25 @@ export function ProfileScreen() {
           </div>
         </CardBody>
       </Card>
+
+      {isAdmin ? (
+        <Card>
+          <CardBody className="flex flex-wrap items-center gap-3 p-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-semibold">Data management</h2>
+              <p className="text-sm text-muted-foreground">
+                Import the clubs and players files and review past imports.
+              </p>
+            </div>
+            <Link
+              to="/admin"
+              className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Open
+            </Link>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Button variant="outline" size="lg" block onClick={handleLogout}>
         <LogOut className="h-4 w-4" />
