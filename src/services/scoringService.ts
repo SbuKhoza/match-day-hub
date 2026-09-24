@@ -63,6 +63,7 @@ export function calculateGameweek(
   team: Pick<FantasyTeam, "squad" | "starters" | "captainId">,
   points: PlayerPoints[],
   gameweek: number,
+  resolveName?: NameResolver,
 ): GameweekResult {
   const byPlayer = new Map(
     points.filter((entry) => entry.gameweek === gameweek).map((entry) => [entry.playerId, entry]),
@@ -74,7 +75,7 @@ export function calculateGameweek(
     const captain = team.captainId === playerId && starting;
     return {
       playerId,
-      name: getPlayer(playerId)?.name ?? "Unknown player",
+      name: resolveName?.(playerId) ?? playerId,
       starting,
       captain,
       rawPoints: raw,
@@ -104,3 +105,4 @@ export function calculateOverall(
   const gameweeks = [...new Set(points.map((entry) => entry.gameweek))];
   return gameweeks.reduce((sum, gw) => sum + calculateGameweek(team, points, gw).total, 0);
 }
+
