@@ -95,18 +95,38 @@ export function TeamBuilderScreen() {
   const save = useMutation({
     mutationFn: async () => {
       if (!db || !uid) throw new Error("You need to be signed in to save a team.");
-      await saveFantasyTeam(db, uid, {
-        name: name.trim() || "My Fantasy XI",
-        squad: squadIds,
-        starters,
-        captainId,
-        viceCaptainId: starters.find((id) => id !== captainId) ?? null,
-      });
+      await saveFantasyTeam(
+        db,
+        uid,
+        {
+          name: name.trim() || "My Fantasy XI",
+          squad: squadIds,
+          starters,
+          captainId,
+          viceCaptainId: starters.find((id) => id !== captainId) ?? null,
+        },
+        squad,
+        gameweek?.number ?? 0,
+      );
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fantasy", "team", uid] }),
   });
 
   const complete = squadIds.length === SQUAD_SIZE && validation.valid && Boolean(captainId);
+
+  if (isLoading) return <LoadingState label="Loading players…" />;
+
+  if (players.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
+        <EmptyMessage
+          title="No players have been imported yet."
+          description="Squad selection opens once an administrator imports the club and player files and sets prices."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
