@@ -69,8 +69,6 @@ export function PointsScreen() {
         </CardBody>
       </Card>
 
-      <PointsAuditTrail />
-
       <Card>
         <CardBody>
           <h2 className="text-lg font-semibold">Scoring rules</h2>
