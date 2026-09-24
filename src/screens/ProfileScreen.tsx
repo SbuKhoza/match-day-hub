@@ -103,25 +103,34 @@ export function ProfileScreen() {
               ? "Saving…"
               : (teamStatus ?? "Tap a club to update your personalised feed.")}
           </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAMS.map((team) => (
-              <button
-                key={team.id}
-                type="button"
-                onClick={() => handleTeamChange(team.id)}
-                disabled={saving !== null}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-secondary disabled:opacity-60",
-                  profile?.favoriteTeam === team.id && "ring-2 ring-foreground",
-                )}
-              >
-                <TeamBadge team={team} size="sm" />
-                <span className="min-w-0 truncate text-sm font-medium">{team.name}</span>
-                {profile?.favoriteTeam === team.id ? (
-                  <Check className="ml-auto h-4 w-4 shrink-0" />
-                ) : null}
-              </button>
-            ))}
+          <div className="mt-4">
+            {isLoading ? <LoadingState label="Loading clubs…" /> : null}
+            {!isLoading && clubs.length === 0 ? (
+              <EmptyMessage title="No clubs have been imported yet." />
+            ) : null}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {clubs.map((team) => (
+                <button
+                  key={team.teamId}
+                  type="button"
+                  onClick={() => handleTeamChange(team.teamId)}
+                  disabled={saving !== null}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-secondary disabled:opacity-60",
+                    profile?.favoriteTeam === team.teamId && "ring-2 ring-foreground",
+                  )}
+                >
+                  <TeamBadge
+                    team={{ name: team.teamName, shortName: team.shortName, logo: team.logo }}
+                    size="sm"
+                  />
+                  <span className="min-w-0 truncate text-sm font-medium">{team.teamName}</span>
+                  {profile?.favoriteTeam === team.teamId ? (
+                    <Check className="ml-auto h-4 w-4 shrink-0" />
+                  ) : null}
+                </button>
+              ))}
+            </div>
           </div>
         </CardBody>
       </Card>
