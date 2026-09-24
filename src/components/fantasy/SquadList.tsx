@@ -43,7 +43,7 @@ export function SquadList({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{player.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {getTeam(player.clubId)?.shortName} · {formatRand(player.price)}
+                        {player.clubShort ?? player.clubName} · {formatRand(player.price)}
                       </p>
                     </div>
                     {onSetCaptain ? (
