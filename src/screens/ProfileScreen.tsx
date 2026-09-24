@@ -4,23 +4,26 @@ import { useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
+import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { useAuth } from "@/hooks/useAuth";
+import { useTeams } from "@/hooks/useMasterData";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
-import { TEAMS, getTeam } from "@/services/mockData";
 import { initials } from "@/utils/format";
 
 export function ProfileScreen() {
   const { profile, user, logout, saveFavoriteTeam, savePreferredTheme } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { data: teams, isLoading } = useTeams();
   const navigate = useNavigate();
   const [saving, setSaving] = useState<string | null>(null);
   const [teamStatus, setTeamStatus] = useState<string | null>(null);
 
   const name = profile?.name ?? user?.displayName ?? "Guest";
-  const favorite = getTeam(profile?.favoriteTeam);
+  const clubs = teams ?? [];
+  const favorite = clubs.find((team) => team.teamId === profile?.favoriteTeam) ?? null;
 
   async function handleTeamChange(teamId: string) {
     if (saving) return;
@@ -28,7 +31,8 @@ export function ProfileScreen() {
     setTeamStatus(null);
     try {
       await saveFavoriteTeam(teamId);
-      setTeamStatus(`Saved — ${getTeam(teamId)?.name ?? "team"} is now your club.`);
+      const club = clubs.find((team) => team.teamId === teamId);
+      setTeamStatus(`Saved — ${club?.teamName ?? "your club"} is now your club.`);
     } catch {
       setTeamStatus("Couldn't save your team. Check your connection and try again.");
     } finally {
