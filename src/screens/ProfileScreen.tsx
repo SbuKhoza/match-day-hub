@@ -65,7 +65,12 @@ export function ProfileScreen() {
               {profile?.email ?? user?.email}
             </p>
           </div>
-          {favorite ? <TeamBadge team={favorite} size="lg" /> : null}
+          {favorite ? (
+            <TeamBadge
+              team={{ name: favorite.teamName, shortName: favorite.shortName, logo: favorite.logo }}
+              size="lg"
+            />
+          ) : null}
         </CardBody>
       </Card>
 
