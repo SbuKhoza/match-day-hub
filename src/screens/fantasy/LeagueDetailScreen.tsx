@@ -8,9 +8,15 @@ import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/fantasy/EmptyState";
 import { LeagueTable, type LeagueTableRow } from "@/components/fantasy/LeagueTable";
-import { useFantasyDb, useGameweek, useLeague, usePlayerPoints, useTransfers } from "@/hooks/useFantasy";
+import {
+  useFantasyDb,
+  useGameweek,
+  useLeague,
+  usePlayerPoints,
+  usePlayers,
+  useTransfers,
+} from "@/hooks/useFantasy";
 import { leaveLeague } from "@/services/fantasyService";
-import { getPlayer } from "@/services/playerPool";
 import { calculateGameweek, calculateOverall } from "@/services/scoringService";
 
 export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
