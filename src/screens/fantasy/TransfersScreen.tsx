@@ -56,15 +56,22 @@ export function TransfersScreen() {
       if (!db || !uid || !team || !outId) throw new Error("Select a player to transfer out first.");
       const nextSquad = team.squad.map((id) => (id === outId ? incoming.id : id));
       const nextStarters = team.starters.map((id) => (id === outId ? incoming.id : id));
-      const check = validateSquad(nextSquad.map(getPlayer).filter(Boolean) as Player[], nextStarters);
+      const nextPlayers = nextSquad.map(resolve).filter(Boolean) as Player[];
+      const check = validateSquad(nextPlayers, nextStarters);
       if (!check.valid) throw new Error(check.errors[0]!);
-      await saveFantasyTeam(db, uid, {
-        name: team.name,
-        squad: nextSquad,
-        starters: nextStarters,
-        captainId: team.captainId === outId ? incoming.id : team.captainId,
-        viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
-      });
+      await saveFantasyTeam(
+        db,
+        uid,
+        {
+          name: team.name,
+          squad: nextSquad,
+          starters: nextStarters,
+          captainId: team.captainId === outId ? incoming.id : team.captainId,
+          viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
+        },
+        nextPlayers,
+        gameweek?.number ?? 0,
+      );
       await recordTransfer(db, {
         uid,
         gameweek: gameweek?.number ?? 0,
