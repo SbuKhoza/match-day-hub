@@ -27,7 +27,7 @@ export function AdminDashboardScreen() {
         <StatTile
           label="Last import"
           value={lastImport ? new Date(lastImport.importedAt).toLocaleDateString() : "Never"}
-          hint={lastImport ? lastImport.fileName : undefined}
+          {...(lastImport ? { hint: lastImport.fileName } : {})}
         />
       </div>
 
