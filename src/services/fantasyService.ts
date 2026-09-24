@@ -111,14 +111,8 @@ export async function saveFantasyTeam(
 
 /* -------------------------------- gameweeks ------------------------------- */
 
-export const CURRENT_GAMEWEEK: Gameweek = {
-  id: "gw-25",
-  number: 25,
-  status: "upcoming",
-  deadline: new Date(Date.now() + 2 * 86_400_000).toISOString(),
-};
-
-export async function fetchCurrentGameweek(db: Firestore): Promise<Gameweek> {
+/** Returns the latest stored gameweek, or null when none has been set up yet. */
+export async function fetchCurrentGameweek(db: Firestore): Promise<Gameweek | null> {
   try {
     const snapshot = await getDocs(
       query(collection(db, COLLECTIONS.gameweeks), orderBy("number", "desc"), fsLimit(1)),
@@ -126,9 +120,9 @@ export async function fetchCurrentGameweek(db: Firestore): Promise<Gameweek> {
     const first = snapshot.docs[0];
     if (first) return { id: first.id, ...(first.data() as Omit<Gameweek, "id">) };
   } catch {
-    /* fall through */
+    /* no gameweeks readable */
   }
-  return CURRENT_GAMEWEEK;
+  return null;
 }
 
 /* --------------------------------- leagues -------------------------------- */
