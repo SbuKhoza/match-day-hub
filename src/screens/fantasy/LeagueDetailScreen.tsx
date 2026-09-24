@@ -8,9 +8,15 @@ import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/fantasy/EmptyState";
 import { LeagueTable, type LeagueTableRow } from "@/components/fantasy/LeagueTable";
-import { useFantasyDb, useGameweek, useLeague, usePlayerPoints, useTransfers } from "@/hooks/useFantasy";
+import {
+  useFantasyDb,
+  useGameweek,
+  useLeague,
+  usePlayerPoints,
+  usePlayers,
+  useTransfers,
+} from "@/hooks/useFantasy";
 import { leaveLeague } from "@/services/fantasyService";
-import { getPlayer } from "@/services/playerPool";
 import { calculateGameweek, calculateOverall } from "@/services/scoringService";
 
 export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
@@ -21,6 +27,7 @@ export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
   const { data: gameweek } = useGameweek();
   const { data: points = [] } = usePlayerPoints();
   const { data: transfers = [] } = useTransfers();
+  const { byId } = usePlayers();
   const [copied, setCopied] = useState(false);
 
   const gw = gameweek?.number ?? 0;
@@ -51,7 +58,7 @@ export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
       name: team.name,
       gameweekPoints: calculateGameweek(team, points, gw).total,
       totalPoints: calculateOverall(team, points),
-      captain: team.captainId ? (getPlayer(team.captainId)?.name ?? "—") : "—",
+      captain: team.captainId ? (byId.get(team.captainId)?.name ?? "—") : "—",
       transfers: team.uid === uid ? transfers.length : 0,
     }))
     .sort((a, b) => b.totalPoints - a.totalPoints || b.gameweekPoints - a.gameweekPoints);

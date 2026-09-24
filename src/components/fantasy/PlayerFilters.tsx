@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { TEAMS } from "@/services/mockData";
+import type { MasterTeam } from "@/types/master";
 import type { PlayerPosition } from "@/types/fantasy";
 
 export interface PlayerFilterState {
@@ -17,10 +17,12 @@ export function PlayerFilters({
   value,
   onChange,
   priceCeiling,
+  clubs,
 }: {
   value: PlayerFilterState;
   onChange: (next: PlayerFilterState) => void;
   priceCeiling: number;
+  clubs: MasterTeam[];
 }) {
   const set = (patch: Partial<PlayerFilterState>) => onChange({ ...value, ...patch });
 
@@ -33,7 +35,7 @@ export function PlayerFilters({
           value={value.search}
           maxLength={40}
           onChange={(event) => set({ search: event.target.value })}
-          placeholder="Search player"
+          placeholder="Search players"
           className="h-11 w-full rounded-full border border-border bg-transparent pl-10 pr-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </label>
@@ -61,9 +63,9 @@ export function PlayerFilters({
           className="h-11 rounded-full border border-border bg-transparent px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="ALL">All clubs</option>
-          {TEAMS.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
+          {clubs.map((team) => (
+            <option key={team.teamId} value={team.teamId}>
+              {team.teamName}
             </option>
           ))}
         </select>
@@ -72,7 +74,7 @@ export function PlayerFilters({
           <span className="shrink-0 text-muted-foreground">Max</span>
           <input
             type="range"
-            min={3_000_000}
+            min={1_000_000}
             max={priceCeiling}
             step={500_000}
             value={value.maxPrice}

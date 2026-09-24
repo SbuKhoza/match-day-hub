@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { cn } from "@/lib/utils";
-import { getTeam } from "@/services/mockData";
 import { formatRand } from "@/utils/format";
 import type { Player } from "@/types/fantasy";
 
@@ -20,7 +19,6 @@ export function PlayerRow({
   onToggle?: (player: Player) => void;
   trailing?: ReactNode;
 }) {
-  const club = getTeam(player.clubId);
   const Icon = selected ? Minus : Plus;
 
   return (
@@ -30,11 +28,11 @@ export function PlayerRow({
         selected && "bg-secondary",
       )}
     >
-      {club ? <TeamBadge team={club} size="sm" /> : null}
+      <TeamBadge team={{ name: player.clubName, shortName: player.clubShort, logo: null }} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{player.name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {player.position} · {club?.shortName ?? player.clubId} · {player.totalPoints} pts
+          {player.position} · {player.clubShort ?? player.clubName} · {player.totalPoints} pts
         </p>
       </div>
       <span className="text-sm font-semibold tabular-nums">{formatRand(player.price)}</span>

@@ -3,19 +3,20 @@ import { Star } from "lucide-react";
 import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/fantasy/EmptyState";
-import { PointsAuditTrail } from "@/components/fantasy/PointsAuditTrail";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { cn } from "@/lib/utils";
-import { useFantasyTeam, useGameweek, usePlayerPoints } from "@/hooks/useFantasy";
+import { useFantasyTeam, useGameweek, usePlayerPoints, usePlayers } from "@/hooks/useFantasy";
 import { SCORING_RULES, calculateGameweek, calculateOverall } from "@/services/scoringService";
 
 export function PointsScreen() {
   const { data: team } = useFantasyTeam();
   const { data: gameweek } = useGameweek();
   const { data: points = [], isFetching } = usePlayerPoints();
+  const { byId } = usePlayers();
 
   const gw = gameweek?.number ?? 0;
-  const result = team ? calculateGameweek(team, points, gw) : null;
+  const resolveName = (playerId: string) => byId.get(playerId)?.name;
+  const result = team ? calculateGameweek(team, points, gw, resolveName) : null;
   const overall = team ? calculateOverall(team, points) : 0;
 
   return (
@@ -67,8 +68,6 @@ export function PointsScreen() {
           )}
         </CardBody>
       </Card>
-
-      <PointsAuditTrail />
 
       <Card>
         <CardBody>

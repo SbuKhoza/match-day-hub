@@ -9,22 +9,18 @@ import { EmptyState } from "@/components/fantasy/EmptyState";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useQuietLiveUpdates } from "@/hooks/useLive";
 import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers, useTransfers } from "@/hooks/useFantasy";
 import { recordTransfer, saveFantasyTeam, validateSquad } from "@/services/fantasyService";
-import { getPlayer } from "@/services/playerPool";
 import { SQUAD_RULES, type Player } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
-export function TransfersScreen() {
-  // Live match syncing keeps running in the background, but it must never re-render
-  // the squad you are actively editing.
-  useQuietLiveUpdates();
+const PRICE_CEILING = 30_000_000;
 
+export function TransfersScreen() {
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: team } = useFantasyTeam();
-  const { data: players = [] } = usePlayers();
+  const { data: players, byId, clubs } = usePlayers();
   const { data: transfers = [] } = useTransfers();
   const { data: gameweek } = useGameweek();
 
@@ -33,11 +29,12 @@ export function TransfersScreen() {
     search: "",
     position: "ALL",
     clubId: "ALL",
-    maxPrice: 15_000_000,
+    maxPrice: PRICE_CEILING,
   });
 
-  const squad = (team?.squad ?? []).map(getPlayer).filter(Boolean) as Player[];
-  const outPlayer = outId ? getPlayer(outId) : undefined;
+  const resolve = (id: string) => byId.get(id);
+  const squad = (team?.squad ?? []).map(resolve).filter(Boolean) as Player[];
+  const outPlayer = outId ? byId.get(outId) : undefined;
   const spent = squad.reduce((sum, player) => sum + player.price, 0);
   const budgetLeft = SQUAD_RULES.budget - spent + (outPlayer?.price ?? 0);
 
@@ -59,15 +56,22 @@ export function TransfersScreen() {
       if (!db || !uid || !team || !outId) throw new Error("Select a player to transfer out first.");
       const nextSquad = team.squad.map((id) => (id === outId ? incoming.id : id));
       const nextStarters = team.starters.map((id) => (id === outId ? incoming.id : id));
-      const check = validateSquad(nextSquad.map(getPlayer).filter(Boolean) as Player[], nextStarters);
+      const nextPlayers = nextSquad.map(resolve).filter(Boolean) as Player[];
+      const check = validateSquad(nextPlayers, nextStarters);
       if (!check.valid) throw new Error(check.errors[0]!);
-      await saveFantasyTeam(db, uid, {
-        name: team.name,
-        squad: nextSquad,
-        starters: nextStarters,
-        captainId: team.captainId === outId ? incoming.id : team.captainId,
-        viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
-      });
+      await saveFantasyTeam(
+        db,
+        uid,
+        {
+          name: team.name,
+          squad: nextSquad,
+          starters: nextStarters,
+          captainId: team.captainId === outId ? incoming.id : team.captainId,
+          viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
+        },
+        nextPlayers,
+        gameweek?.number ?? 0,
+      );
       await recordTransfer(db, {
         uid,
         gameweek: gameweek?.number ?? 0,
@@ -126,7 +130,12 @@ export function TransfersScreen() {
             <h2 className="text-lg font-semibold">Transfer in</h2>
             {outPlayer ? (
               <>
-                <PlayerFilters value={filters} onChange={setFilters} priceCeiling={15_000_000} />
+                <PlayerFilters
+                  value={filters}
+                  onChange={setFilters}
+                  priceCeiling={PRICE_CEILING}
+                  clubs={clubs}
+                />
                 <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
                   {candidates.map((player) => (
                     <div key={player.id} className="flex items-center gap-2">
@@ -166,8 +175,8 @@ export function TransfersScreen() {
             <ul className="mt-3 space-y-2 text-sm">
               {transfers.map((transfer) => (
                 <li key={transfer.id} className="rounded-2xl border border-border px-3 py-2">
-                  GW {transfer.gameweek}: {getPlayer(transfer.outPlayerId)?.name ?? transfer.outPlayerId} →{" "}
-                  {getPlayer(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
+                  GW {transfer.gameweek}: {resolve(transfer.outPlayerId)?.name ?? transfer.outPlayerId} →{" "}
+                  {resolve(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
                 </li>
               ))}
             </ul>

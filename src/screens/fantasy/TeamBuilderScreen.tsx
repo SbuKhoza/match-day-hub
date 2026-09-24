@@ -4,28 +4,26 @@ import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
+import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { SquadList } from "@/components/fantasy/SquadList";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useQuietLiveUpdates } from "@/hooks/useLive";
-import { useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
+import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers } from "@/hooks/useFantasy";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
 const POSITION_ORDER: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
+const PRICE_CEILING = 30_000_000;
 
 export function TeamBuilderScreen() {
-  // Live match syncing keeps running in the background, but it must never re-render
-  // the squad you are actively editing.
-  useQuietLiveUpdates();
-
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
-  const { data: players = [] } = usePlayers();
+  const { data: players, byId, clubs, isLoading } = usePlayers();
   const { data: existing } = useFantasyTeam();
+  const { data: gameweek } = useGameweek();
 
   const [name, setName] = useState("");
   const [squadIds, setSquadIds] = useState<string[]>([]);
@@ -36,7 +34,7 @@ export function TeamBuilderScreen() {
     search: "",
     position: "ALL",
     clubId: "ALL",
-    maxPrice: 15_000_000,
+    maxPrice: PRICE_CEILING,
   });
 
   if (existing && !hydrated) {
@@ -47,7 +45,6 @@ export function TeamBuilderScreen() {
     setCaptainId(existing.captainId);
   }
 
-  const byId = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
   const squad = squadIds.map((id) => byId.get(id)).filter(Boolean) as Player[];
   const validation = validateSquad(squad, starters);
   const clubCounts = useMemo(() => {
@@ -98,18 +95,38 @@ export function TeamBuilderScreen() {
   const save = useMutation({
     mutationFn: async () => {
       if (!db || !uid) throw new Error("You need to be signed in to save a team.");
-      await saveFantasyTeam(db, uid, {
-        name: name.trim() || "My Fantasy XI",
-        squad: squadIds,
-        starters,
-        captainId,
-        viceCaptainId: starters.find((id) => id !== captainId) ?? null,
-      });
+      await saveFantasyTeam(
+        db,
+        uid,
+        {
+          name: name.trim() || "My Fantasy XI",
+          squad: squadIds,
+          starters,
+          captainId,
+          viceCaptainId: starters.find((id) => id !== captainId) ?? null,
+        },
+        squad,
+        gameweek?.number ?? 0,
+      );
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fantasy", "team", uid] }),
   });
 
   const complete = squadIds.length === SQUAD_SIZE && validation.valid && Boolean(captainId);
+
+  if (isLoading) return <LoadingState label="Loading players…" />;
+
+  if (players.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
+        <EmptyMessage
+          title="No players have been imported yet."
+          description="Squad selection opens once an administrator imports the club and player files and sets prices."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -158,7 +175,12 @@ export function TeamBuilderScreen() {
         <Card>
           <CardBody className="space-y-4">
             <h2 className="text-lg font-semibold">Player pool</h2>
-            <PlayerFilters value={filters} onChange={setFilters} priceCeiling={15_000_000} />
+            <PlayerFilters
+              value={filters}
+              onChange={setFilters}
+              priceCeiling={PRICE_CEILING}
+              clubs={clubs}
+            />
             <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
               {visible.map((player) => (
                 <PlayerRow
