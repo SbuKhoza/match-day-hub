@@ -9,22 +9,18 @@ import { EmptyState } from "@/components/fantasy/EmptyState";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useQuietLiveUpdates } from "@/hooks/useLive";
 import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers, useTransfers } from "@/hooks/useFantasy";
 import { recordTransfer, saveFantasyTeam, validateSquad } from "@/services/fantasyService";
-import { getPlayer } from "@/services/playerPool";
 import { SQUAD_RULES, type Player } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
-export function TransfersScreen() {
-  // Live match syncing keeps running in the background, but it must never re-render
-  // the squad you are actively editing.
-  useQuietLiveUpdates();
+const PRICE_CEILING = 30_000_000;
 
+export function TransfersScreen() {
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: team } = useFantasyTeam();
-  const { data: players = [] } = usePlayers();
+  const { data: players, byId, clubs } = usePlayers();
   const { data: transfers = [] } = useTransfers();
   const { data: gameweek } = useGameweek();
 
@@ -33,11 +29,12 @@ export function TransfersScreen() {
     search: "",
     position: "ALL",
     clubId: "ALL",
-    maxPrice: 15_000_000,
+    maxPrice: PRICE_CEILING,
   });
 
-  const squad = (team?.squad ?? []).map(getPlayer).filter(Boolean) as Player[];
-  const outPlayer = outId ? getPlayer(outId) : undefined;
+  const resolve = (id: string) => byId.get(id);
+  const squad = (team?.squad ?? []).map(resolve).filter(Boolean) as Player[];
+  const outPlayer = outId ? byId.get(outId) : undefined;
   const spent = squad.reduce((sum, player) => sum + player.price, 0);
   const budgetLeft = SQUAD_RULES.budget - spent + (outPlayer?.price ?? 0);
 

@@ -175,7 +175,12 @@ export function TeamBuilderScreen() {
         <Card>
           <CardBody className="space-y-4">
             <h2 className="text-lg font-semibold">Player pool</h2>
-            <PlayerFilters value={filters} onChange={setFilters} priceCeiling={15_000_000} />
+            <PlayerFilters
+              value={filters}
+              onChange={setFilters}
+              priceCeiling={PRICE_CEILING}
+              clubs={clubs}
+            />
             <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
               {visible.map((player) => (
                 <PlayerRow
