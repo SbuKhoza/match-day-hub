@@ -1,5 +1,7 @@
-import { getPlayer } from "./playerPool";
 import type { FantasyTeam, PlayerPoints, PlayerStatLine } from "@/types/fantasy";
+
+/** Resolves a player id to a display name; supplied by the caller from imported data. */
+export type NameResolver = (playerId: string) => string | undefined;
 
 export const SCORING_RULES = [
   { key: "appearance", label: "Appearance", points: 1 },
