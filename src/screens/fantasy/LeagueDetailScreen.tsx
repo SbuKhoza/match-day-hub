@@ -58,7 +58,7 @@ export function LeagueDetailScreen({ leagueId }: { leagueId: string }) {
       name: team.name,
       gameweekPoints: calculateGameweek(team, points, gw).total,
       totalPoints: calculateOverall(team, points),
-      captain: team.captainId ? (getPlayer(team.captainId)?.name ?? "—") : "—",
+      captain: team.captainId ? (byId.get(team.captainId)?.name ?? "—") : "—",
       transfers: team.uid === uid ? transfers.length : 0,
     }))
     .sort((a, b) => b.totalPoints - a.totalPoints || b.gameweekPoints - a.gameweekPoints);
