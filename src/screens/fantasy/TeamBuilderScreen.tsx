@@ -4,28 +4,26 @@ import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
+import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
 import { SquadList } from "@/components/fantasy/SquadList";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useQuietLiveUpdates } from "@/hooks/useLive";
-import { useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
+import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers } from "@/hooks/useFantasy";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
 const POSITION_ORDER: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
+const PRICE_CEILING = 30_000_000;
 
 export function TeamBuilderScreen() {
-  // Live match syncing keeps running in the background, but it must never re-render
-  // the squad you are actively editing.
-  useQuietLiveUpdates();
-
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
-  const { data: players = [] } = usePlayers();
+  const { data: players, byId, clubs, isLoading } = usePlayers();
   const { data: existing } = useFantasyTeam();
+  const { data: gameweek } = useGameweek();
 
   const [name, setName] = useState("");
   const [squadIds, setSquadIds] = useState<string[]>([]);
@@ -36,7 +34,7 @@ export function TeamBuilderScreen() {
     search: "",
     position: "ALL",
     clubId: "ALL",
-    maxPrice: 15_000_000,
+    maxPrice: PRICE_CEILING,
   });
 
   if (existing && !hydrated) {
@@ -47,7 +45,6 @@ export function TeamBuilderScreen() {
     setCaptainId(existing.captainId);
   }
 
-  const byId = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
   const squad = squadIds.map((id) => byId.get(id)).filter(Boolean) as Player[];
   const validation = validateSquad(squad, starters);
   const clubCounts = useMemo(() => {
