@@ -26,6 +26,7 @@ import type {
   Transfer,
 } from "@/types/fantasy";
 import { SQUAD_RULES, SQUAD_SIZE } from "@/types/fantasy";
+import { getFantasySettings } from "./adminService";
 
 export const COLLECTIONS = {
   fantasyTeams: "fantasyTeams",
@@ -46,7 +47,11 @@ export interface SquadValidation {
   counts: Record<PlayerPosition, number>;
 }
 
-export function validateSquad(squad: Player[], starters: string[] = []): SquadValidation {
+export function validateSquad(
+  squad: Player[],
+  starters: string[] = [],
+  budget: number = SQUAD_RULES.budget,
+): SquadValidation {
   const counts: Record<PlayerPosition, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
   const perClub = new Map<string, number>();
   let spent = 0;
@@ -69,12 +74,12 @@ export function validateSquad(squad: Player[], starters: string[] = []): SquadVa
       errors.push(`Maximum ${SQUAD_RULES.maxPerClub} players from one club (${clubId}: ${count}).`);
     }
   }
-  if (spent > SQUAD_RULES.budget) errors.push("Squad is over budget.");
+  if (spent > budget) errors.push("Squad is over budget.");
   if (squad.length === SQUAD_SIZE && starters.length !== SQUAD_RULES.starters) {
     errors.push(`Pick exactly ${SQUAD_RULES.starters} starting players.`);
   }
 
-  return { valid: errors.length === 0, errors, spent, remaining: SQUAD_RULES.budget - spent, counts };
+  return { valid: errors.length === 0, errors, spent, remaining: budget - spent, counts };
 }
 
 /* ------------------------------ fantasy teams ----------------------------- */
@@ -93,7 +98,8 @@ export async function saveFantasyTeam(
   players: Player[],
   gameweek: number,
 ): Promise<void> {
-  const check = validateSquad(players, input.starters);
+  const { budget } = await getFantasySettings(db);
+  const check = validateSquad(players, input.starters, budget);
   if (!check.valid) throw new Error(check.errors[0] ?? "Invalid squad");
 
   await setDoc(
