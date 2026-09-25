@@ -7,6 +7,7 @@ export interface UserProfile {
   favoriteTeam: string | null;
   createdAt: string;
   theme: ThemeMode;
+  disabled?: boolean;
 }
 
 export interface Team {
@@ -64,4 +65,6 @@ export interface Video {
   thumbnail: string;
   duration: string;
   views: string;
+  url?: string;
+  publishedAt?: string;
 }

@@ -1,3 +1,4 @@
+import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftRight } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -36,7 +37,8 @@ export function TransfersScreen() {
   const squad = (team?.squad ?? []).map(resolve).filter(Boolean) as Player[];
   const outPlayer = outId ? byId.get(outId) : undefined;
   const spent = squad.reduce((sum, player) => sum + player.price, 0);
-  const budgetLeft = SQUAD_RULES.budget - spent + (outPlayer?.price ?? 0);
+  const { budget } = useFantasySettings();
+  const budgetLeft = budget - spent + (outPlayer?.price ?? 0);
 
   const candidates = useMemo(
     () =>
@@ -57,7 +59,7 @@ export function TransfersScreen() {
       const nextSquad = team.squad.map((id) => (id === outId ? incoming.id : id));
       const nextStarters = team.starters.map((id) => (id === outId ? incoming.id : id));
       const nextPlayers = nextSquad.map(resolve).filter(Boolean) as Player[];
-      const check = validateSquad(nextPlayers, nextStarters);
+      const check = validateSquad(nextPlayers, nextStarters, budget);
       if (!check.valid) throw new Error(check.errors[0]!);
       await saveFantasyTeam(
         db,
