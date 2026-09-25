@@ -1,3 +1,4 @@
+import { useFantasySettings } from "@/hooks/useAdmin";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftRight, CalendarClock, Trophy, Users, Wallet, Star } from "lucide-react";
 
@@ -27,7 +28,8 @@ export function FantasyScreen() {
   const gw = gameweek?.number ?? 0;
   const gwResult = team && points ? calculateGameweek(team, points, gw) : null;
   const overall = team && points ? calculateOverall(team, points) : 0;
-  const remaining = SQUAD_RULES.budget - (team?.budgetSpent ?? 0);
+  const { budget } = useFantasySettings();
+  const remaining = budget - (team?.budgetSpent ?? 0);
 
   return (
     <div className="space-y-6">
@@ -83,7 +85,7 @@ export function FantasyScreen() {
               <EmptyState
                 icon={Users}
                 title="No squad yet"
-                description="Pick 17 players inside your R220.0m budget to enter this season."
+                description="Pick 17 players inside your budget to enter this season."
                 action={
                   <Link
                     to="/fantasy/team"

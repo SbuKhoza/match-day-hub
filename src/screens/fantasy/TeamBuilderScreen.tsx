@@ -1,3 +1,4 @@
+import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -24,6 +25,7 @@ export function TeamBuilderScreen() {
   const { data: players, byId, clubs, isLoading } = usePlayers();
   const { data: existing } = useFantasyTeam();
   const { data: gameweek } = useGameweek();
+  const { budget } = useFantasySettings();
 
   const [name, setName] = useState("");
   const [squadIds, setSquadIds] = useState<string[]>([]);
@@ -46,7 +48,7 @@ export function TeamBuilderScreen() {
   }
 
   const squad = squadIds.map((id) => byId.get(id)).filter(Boolean) as Player[];
-  const validation = validateSquad(squad, starters);
+  const validation = validateSquad(squad, starters, budget);
   const clubCounts = useMemo(() => {
     const counts = new Map<string, number>();
     squad.forEach((player) => counts.set(player.clubId, (counts.get(player.clubId) ?? 0) + 1));
@@ -69,7 +71,7 @@ export function TeamBuilderScreen() {
     if (squadIds.length >= SQUAD_SIZE) return false;
     if (validation.counts[player.position] >= SQUAD_RULES.positions[player.position]) return false;
     if ((clubCounts.get(player.clubId) ?? 0) >= SQUAD_RULES.maxPerClub) return false;
-    return validation.spent + player.price <= SQUAD_RULES.budget;
+    return validation.spent + player.price <= budget;
   }
 
   function togglePlayer(player: Player) {
