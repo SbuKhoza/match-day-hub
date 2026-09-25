@@ -7,6 +7,7 @@ export interface UserProfile {
   favoriteTeam: string | null;
   createdAt: string;
   theme: ThemeMode;
+  disabled?: boolean;
 }
 
 export interface Team {

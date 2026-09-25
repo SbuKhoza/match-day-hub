@@ -36,6 +36,7 @@ export async function fetchUserProfile(db: Firestore, uid: string): Promise<User
         ? createdAt.toDate().toISOString()
         : ((createdAt as string) ?? new Date().toISOString()),
     theme: (data["theme"] as ThemeMode) ?? "light",
+    disabled: data["disabled"] === true,
   };
 }
 
