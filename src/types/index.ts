@@ -64,4 +64,6 @@ export interface Video {
   thumbnail: string;
   duration: string;
   views: string;
+  url?: string;
+  publishedAt?: string;
 }
