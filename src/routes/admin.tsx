@@ -1,17 +1,14 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { RequireAdmin } from "@/components/admin/RequireAdmin";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireAdminAuth } from "@/components/admin/RequireAdminAuth";
 import { AppShell } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
-    <RequireAuth>
-      <AppShell>
-        <RequireAdmin>
-          <Outlet />
-        </RequireAdmin>
-      </AppShell>
-    </RequireAuth>
+    <AppShell>
+      <RequireAdminAuth>
+        <Outlet />
+      </RequireAdminAuth>
+    </AppShell>
   ),
 });
