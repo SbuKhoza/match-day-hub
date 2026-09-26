@@ -19,17 +19,19 @@ service cloud.firestore {
 
     // A user profile document is private to its owner.
     match /users/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow update, delete: if isAdmin();
 
       allow create: if signedIn()
                     && request.auth.uid == uid
-                    && request.resource.data.uid == uid;
+                    && request.resource.data.uid == uid
+                    && !("disabled" in request.resource.data);
 
+      // Owners may edit their profile but never lift a suspension themselves.
       allow update: if signedIn()
                     && request.auth.uid == uid
-                    && request.resource.data.uid == resource.data.uid;
-
-      allow delete: if false;
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.get("disabled", false) == resource.data.get("disabled", false);
     }
 
     // Fantasy squads: readable by any signed-in user (league tables), writable by the owner.
@@ -38,7 +40,7 @@ service cloud.firestore {
       allow create, update: if signedIn()
                             && request.auth.uid == uid
                             && request.resource.data.uid == uid;
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // Master data imported from the clubs/players export.
@@ -110,6 +112,22 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    // Editorial content and fantasy settings managed by administrators.
+    match /news/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /videos/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
 
     match /{document=**} {
