@@ -84,7 +84,7 @@ export function AdminTeamsScreen() {
           <CardBody className="divide-y divide-border p-2">
             {list.map((team) => (
               <div key={team.teamId} className="flex items-center gap-3 px-2 py-2.5">
-                <TeamBadge name={team.teamName} logo={team.logo} />
+                <TeamBadge size="sm" team={{ name: team.teamName, shortName: team.shortName, logo: team.logo }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{team.teamName}</p>
                   <p className="truncate text-xs text-muted-foreground">
