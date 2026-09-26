@@ -16,3 +16,11 @@
 ## Known limitations (data provider)
 - Match events carry display names only, no player IDs — no automatic player matching; provider links stay empty.
 - Per-match assists, own goals, penalty misses, penalty saves and minutes played are not provided; those scoring rules stay in place but score nothing rather than guessing.
+
+## Admin management (done)
+- [x] Separate admin area; admins redirected away from fan screens
+- [x] Clubs & players manual add/edit/delete (plus CSV import)
+- [x] Fantasy budget setting (settings/fantasy)
+- [x] News & videos publishing
+- [x] User management (edit, suspend, delete profile)
+- [ ] BLOCKED: user must publish updated firestore.rules

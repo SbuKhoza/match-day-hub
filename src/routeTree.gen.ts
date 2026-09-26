@@ -21,6 +21,12 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as VideosRouteImport } from './routes/videos'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminImportRouteImport } from './routes/admin.import'
+import { Route as AdminNewsRouteImport } from './routes/admin.news'
+import { Route as AdminPlayersRouteImport } from './routes/admin.players'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as FantasyIndexRouteImport } from './routes/fantasy.index'
 import { Route as FantasyPointsRouteImport } from './routes/fantasy.points'
 import { Route as FantasyTeamRouteImport } from './routes/fantasy.team'
@@ -92,6 +98,36 @@ const AdminImportRoute = AdminImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNewsRoute = AdminNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPlayersRoute = AdminPlayersRouteImport.update({
+  id: '/players',
+  path: '/players',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTeamsRoute = AdminTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVideosRoute = AdminVideosRouteImport.update({
+  id: '/videos',
+  path: '/videos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const FantasyIndexRoute = FantasyIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -155,6 +191,12 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
   '/admin/import': typeof AdminImportRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/players': typeof AdminPlayersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -176,6 +218,12 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
   '/admin/import': typeof AdminImportRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/players': typeof AdminPlayersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -201,6 +249,12 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/videos': typeof VideosRoute
   '/admin/import': typeof AdminImportRoute
+  '/admin/news': typeof AdminNewsRoute
+  '/admin/players': typeof AdminPlayersRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -227,6 +281,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/videos'
     | '/admin/import'
+    | '/admin/news'
+    | '/admin/players'
+    | '/admin/settings'
+    | '/admin/teams'
+    | '/admin/users'
+    | '/admin/videos'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -248,6 +308,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/videos'
     | '/admin/import'
+    | '/admin/news'
+    | '/admin/players'
+    | '/admin/settings'
+    | '/admin/teams'
+    | '/admin/users'
+    | '/admin/videos'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -272,6 +338,12 @@ export interface FileRouteTypes {
     | '/profile'
     | '/videos'
     | '/admin/import'
+    | '/admin/news'
+    | '/admin/players'
+    | '/admin/settings'
+    | '/admin/teams'
+    | '/admin/users'
+    | '/admin/videos'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -386,6 +458,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminImportRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/news': {
+      id: '/admin/news'
+      path: '/news'
+      fullPath: '/admin/news'
+      preLoaderRoute: typeof AdminNewsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/players': {
+      id: '/admin/players'
+      path: '/players'
+      fullPath: '/admin/players'
+      preLoaderRoute: typeof AdminPlayersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/teams': {
+      id: '/admin/teams'
+      path: '/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/videos': {
+      id: '/admin/videos'
+      path: '/videos'
+      fullPath: '/admin/videos'
+      preLoaderRoute: typeof AdminVideosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/fantasy/': {
       id: '/fantasy/'
       path: '/'
@@ -461,11 +575,23 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminImportRoute: typeof AdminImportRoute
+  AdminNewsRoute: typeof AdminNewsRoute
+  AdminPlayersRoute: typeof AdminPlayersRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminTeamsRoute: typeof AdminTeamsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminVideosRoute: typeof AdminVideosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminImportRoute: AdminImportRoute,
+  AdminNewsRoute: AdminNewsRoute,
+  AdminPlayersRoute: AdminPlayersRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminTeamsRoute: AdminTeamsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminVideosRoute: AdminVideosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
