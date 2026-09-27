@@ -9,18 +9,10 @@ export function StatLeaderCarousel({
   rows,
   valueKey,
   valueLabel,
-  playerIdBySlug,
 }: {
   rows: NormalizedScorer[];
   valueKey: "goals" | "assists";
   valueLabel: string;
-  /**
-   * Maps the data provider's player slug to this app's own player id
-   * (see HomeScreen.tsx). When a row's slug has an entry here it becomes a
-   * clickable link through to /players/$playerId; otherwise it renders as a
-   * plain, non-clickable row (e.g. before master data has been imported).
-   */
-  playerIdBySlug?: Record<string, string>;
 }) {
   const leaders = rows
     .filter((row) => row[valueKey] !== null)
@@ -31,50 +23,51 @@ export function StatLeaderCarousel({
 
   return (
     <Carousel itemClassName="w-full">
-      {leaders.map((row) => {
-        const playerId = playerIdBySlug?.[row.playerSlug];
+      {leaders.map((row) => (
+        // Every row links to a player profile: /players/provider/$slug resolves
+        // this data-provider slug to our own master-data player when one is
+        // linked, and otherwise falls back to a provider-only profile — so the
+        // card is always clickable, never a dead end. See PlayerBySlugScreen.
+        <Link key={row.playerSlug} to="/players/provider/$slug" params={{ slug: row.playerSlug }}>
+          <Card className="transition-shadow hover:shadow-lifted">
+            <CardBody className="flex items-center gap-3 p-4">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold tabular-nums">
+                {row.rank}
+              </span>
 
-        const cardBody = (
-          <CardBody className="flex items-center gap-3 p-4">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold tabular-nums">
-              {row.rank}
-            </span>
-
-            <span className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-secondary">
-              {row.photo ? (
-                <img src={row.photo} alt="" loading="lazy" className="h-full w-full object-cover" />
-              ) : null}
-            </span>
-
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{row.playerName}</p>
-              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                {row.teamSlug ? (
-                  <TeamBadge
-                    team={{ name: row.teamName, logo: row.teamLogo }}
-                    size="sm"
-                    className="h-4 w-4 rounded-md border-0 bg-transparent p-0"
+              <span className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-secondary">
+                {row.photo ? (
+                  <img
+                    src={row.photo}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
                   />
                 ) : null}
-                <span className="truncate">{row.teamName}</span>
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{row.playerName}</p>
+                <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  {row.teamSlug ? (
+                    <TeamBadge
+                      team={{ name: row.teamName, logo: row.teamLogo }}
+                      size="sm"
+                      className="h-4 w-4 rounded-md border-0 bg-transparent p-0"
+                    />
+                  ) : null}
+                  <span className="truncate">{row.teamName}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="shrink-0 text-right">
-              <p className="text-xl font-semibold tabular-nums">{row[valueKey]}</p>
-              <p className="text-[11px] text-muted-foreground">{valueLabel}</p>
-            </div>
-          </CardBody>
-        );
-
-        return playerId ? (
-          <Link key={row.playerSlug} to="/players/$playerId" params={{ playerId }}>
-            <Card className="transition-shadow hover:shadow-lifted">{cardBody}</Card>
-          </Link>
-        ) : (
-          <Card key={row.playerSlug}>{cardBody}</Card>
-        );
-      })}
+              <div className="shrink-0 text-right">
+                <p className="text-xl font-semibold tabular-nums">{row[valueKey]}</p>
+                <p className="text-[11px] text-muted-foreground">{valueLabel}</p>
+              </div>
+            </CardBody>
+          </Card>
+        </Link>
+      ))}
     </Carousel>
   );
 }

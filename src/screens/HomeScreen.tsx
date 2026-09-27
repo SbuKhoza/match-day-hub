@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Handshake, Newspaper, PlayCircle, ShieldCheck, Target } from "lucide-react";
@@ -15,7 +14,7 @@ import { VideoCarousel } from "@/components/home/VideoCarousel";
 import { MatchCard } from "@/components/match/MatchCard";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlayers, useTeam } from "@/hooks/useMasterData";
+import { useTeam } from "@/hooks/useMasterData";
 import { useStandings, useTeamMatches, useTopScorers } from "@/hooks/useSportsData";
 import { contentService } from "@/services/contentService";
 
@@ -56,19 +55,6 @@ export function HomeScreen() {
   const videos = useQuery({ queryKey: ["videos"], queryFn: () => contentService.listVideos(6) });
   const scorers = useTopScorers("goals");
   const assists = useTopScorers("assists");
-
-  // Master player list, used only to resolve a data-provider slug (e.g. from the
-  // scorers/assists feed) to this app's own player id, so leaderboard rows can
-  // link through to /players/$playerId. Players without a mapped slug simply
-  // render as non-clickable rows in the carousel.
-  const players = usePlayers();
-  const playerIdBySlug = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const player of players.data ?? []) {
-      if (player.sportscoreSlug) map[player.sportscoreSlug] = player.playerId;
-    }
-    return map;
-  }, [players.data]);
 
   const row = standings.rows.find((entry) => entry.team.slug === slug);
   // Optional faded backdrop for the club card — the club's own crest, when one is available.
@@ -242,12 +228,7 @@ export function HomeScreen() {
         ) : scorers.rows.length === 0 ? (
           <EmptyMessage title="No statistics available." />
         ) : (
-          <StatLeaderCarousel
-            rows={scorers.rows}
-            valueKey="goals"
-            valueLabel="Goals"
-            playerIdBySlug={playerIdBySlug}
-          />
+          <StatLeaderCarousel rows={scorers.rows} valueKey="goals" valueLabel="Goals" />
         )}
         <LiveDataFooter meta={scorers.meta} />
       </section>
@@ -265,12 +246,7 @@ export function HomeScreen() {
         ) : assists.rows.length === 0 ? (
           <EmptyMessage title="No statistics available." />
         ) : (
-          <StatLeaderCarousel
-            rows={assists.rows}
-            valueKey="assists"
-            valueLabel="Assists"
-            playerIdBySlug={playerIdBySlug}
-          />
+          <StatLeaderCarousel rows={assists.rows} valueKey="assists" valueLabel="Assists" />
         )}
         <LiveDataFooter meta={assists.meta} />
       </section>
