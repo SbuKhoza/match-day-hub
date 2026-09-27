@@ -9,6 +9,30 @@ export function formatKickoff(iso: string): string {
   });
 }
 
+/** Date-only, no kickoff time — "Sat, Oct 17". Used on compact fixture cards. */
+export function formatMatchDate(iso: string | null): string {
+  if (!iso) return "Date TBC";
+  const date = new Date(iso);
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+/** Date + kickoff time — "Sat, Oct 24 · 15:30". Used for upcoming fixtures. */
+export function formatMatchDateTime(iso: string | null): string {
+  if (!iso) return "Date TBC";
+  const date = new Date(iso);
+  const day = date.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  const time = date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return `${day} · ${time}`;
+}
+
 export function relativeDay(iso: string): string {
   const diff = Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
   if (diff === 0) return "Today";
