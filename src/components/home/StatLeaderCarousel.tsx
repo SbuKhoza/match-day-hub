@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { Carousel } from "@/components/common/Carousel";
 import { Card, CardBody } from "@/components/common/Card";
 import { TeamBadge } from "@/components/common/TeamBadge";
@@ -7,10 +9,18 @@ export function StatLeaderCarousel({
   rows,
   valueKey,
   valueLabel,
+  playerIdBySlug,
 }: {
   rows: NormalizedScorer[];
   valueKey: "goals" | "assists";
   valueLabel: string;
+  /**
+   * Maps the data provider's player slug to this app's own player id
+   * (see HomeScreen.tsx). When a row's slug has an entry here it becomes a
+   * clickable link through to /players/$playerId; otherwise it renders as a
+   * plain, non-clickable row (e.g. before master data has been imported).
+   */
+  playerIdBySlug?: Record<string, string>;
 }) {
   const leaders = rows
     .filter((row) => row[valueKey] !== null)
@@ -21,8 +31,10 @@ export function StatLeaderCarousel({
 
   return (
     <Carousel itemClassName="w-full">
-      {leaders.map((row) => (
-        <Card key={row.playerSlug}>
+      {leaders.map((row) => {
+        const playerId = playerIdBySlug?.[row.playerSlug];
+
+        const cardBody = (
           <CardBody className="flex items-center gap-3 p-4">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold tabular-nums">
               {row.rank}
@@ -53,8 +65,16 @@ export function StatLeaderCarousel({
               <p className="text-[11px] text-muted-foreground">{valueLabel}</p>
             </div>
           </CardBody>
-        </Card>
-      ))}
+        );
+
+        return playerId ? (
+          <Link key={row.playerSlug} to="/players/$playerId" params={{ playerId }}>
+            <Card className="transition-shadow hover:shadow-lifted">{cardBody}</Card>
+          </Link>
+        ) : (
+          <Card key={row.playerSlug}>{cardBody}</Card>
+        );
+      })}
     </Carousel>
   );
 }

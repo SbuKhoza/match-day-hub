@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Handshake, Newspaper, PlayCircle, ShieldCheck, Target } from "lucide-react";
@@ -14,9 +15,17 @@ import { VideoCarousel } from "@/components/home/VideoCarousel";
 import { MatchCard } from "@/components/match/MatchCard";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { useAuth } from "@/hooks/useAuth";
-import { useTeam } from "@/hooks/useMasterData";
+import { usePlayers, useTeam } from "@/hooks/useMasterData";
 import { useStandings, useTeamMatches, useTopScorers } from "@/hooks/useSportsData";
 import { contentService } from "@/services/contentService";
+
+/**
+ * Opacity of the faded club-crest watermark on the "Your club" card.
+ * Lower = more subtle / easier to read the badge & text over it.
+ * Change this one value to adjust it — e.g. "opacity-[0.15]" for a bolder
+ * watermark, or "opacity-0" to switch it off entirely without removing the code.
+ */
+const CLUB_BACKGROUND_OPACITY = "opacity-[0.1]";
 
 export function HomeScreen() {
   const { profile, user } = useAuth();
@@ -33,6 +42,19 @@ export function HomeScreen() {
   const scorers = useTopScorers("goals");
   const assists = useTopScorers("assists");
 
+  // Master player list, used only to resolve a data-provider slug (e.g. from the
+  // scorers/assists feed) to this app's own player id, so leaderboard rows can
+  // link through to /players/$playerId. Players without a mapped slug simply
+  // render as non-clickable rows in the carousel.
+  const players = usePlayers();
+  const playerIdBySlug = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const player of players.data ?? []) {
+      if (player.sportscoreSlug) map[player.sportscoreSlug] = player.playerId;
+    }
+    return map;
+  }, [players.data]);
+
   const row = standings.rows.find((entry) => entry.team.slug === slug);
   // Optional faded backdrop for the club card — the club's own crest, when one is available.
   const clubBackgroundImage = favourite.data?.logo ?? row?.team.logo ?? null;
@@ -46,105 +68,119 @@ export function HomeScreen() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-sm text-muted-foreground">Welcome back</p>
-        <h1 className="text-2xl font-semibold sm:text-3xl">{firstName}</h1>
-      </header>
+      {/*
+        Header + favourite-club card grouped in their own tighter `space-y-3`
+        wrapper so the gap between the greeting and the club card is smaller
+        than the gap between the other sections below (space-y-8 on the
+        outer div). Increase this value (e.g. space-y-6) for more breathing
+        room between the two.
+      */}
+      <div className="space-y-3">
+        <header>
+          <p className="text-sm text-muted-foreground">Welcome back</p>
+          <h1 className="text-2xl font-semibold sm:text-3xl">{firstName}</h1>
+        </header>
 
-      {!profile?.favoriteTeam || !favourite.data ? (
-        <EmptyMessage
-          title="No club selected yet."
-          description="Choose your club once the club list has been imported, and your results and fixtures appear here."
-          action={
-            <Link to="/profile" className="text-sm font-medium underline">
-              Go to profile
-            </Link>
-          }
-        />
-      ) : (
-        <section className="space-y-3">
-          <Card className="relative">
-            {clubBackgroundImage ? (
-              <>
+        {!profile?.favoriteTeam || !favourite.data ? (
+          <EmptyMessage
+            title="No club selected yet."
+            description="Choose your club once the club list has been imported, and your results and fixtures appear here."
+            action={
+              <Link to="/profile" className="text-sm font-medium underline">
+                Go to profile
+              </Link>
+            }
+          />
+        ) : (
+          <section className="space-y-3">
+            <Card className="relative">
+              {clubBackgroundImage ? (
+                // Faded crest watermark. Purely decorative (aria-hidden) and
+                // pushed further into the top-right corner than the visible
+                // team badge below, so it never sits behind/over the badge.
+                // Opacity is controlled by CLUB_BACKGROUND_OPACITY above.
                 <img
                   src={clubBackgroundImage}
                   alt=""
                   aria-hidden
                   loading="lazy"
-                  className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rotate-6 object-contain opacity-[0.08] blur-[1px] sm:h-64 sm:w-64"
+                  className={`pointer-events-none absolute -right-14 -top-14 h-44 w-44 rotate-6 object-contain blur-[1px] sm:h-52 sm:w-52 ${CLUB_BACKGROUND_OPACITY}`}
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-card via-card/95 to-card/60" />
-              </>
-            ) : null}
-
-            <CardBody className="relative space-y-4 p-4 sm:p-5">
-              <div className="flex items-center gap-3">
-                <TeamBadge
-                  team={{
-                    name: favourite.data.teamName,
-                    shortName: favourite.data.shortName,
-                    logo: clubBackgroundImage,
-                  }}
-                  size="md"
-                />
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Your club
-                  </p>
-                  <h2 className="truncate text-lg font-semibold sm:text-xl">
-                    {favourite.data.teamName}
-                  </h2>
-                </div>
-                <Link
-                  to="/profile"
-                  className="ml-auto shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
-                  Change
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <StatTile label="Position" value={row ? String(row.position) : "—"} />
-                <StatTile label="Points" value={row ? String(row.points) : "—"} />
-              </div>
-            </CardBody>
-          </Card>
-
-          {!slug ? (
-            <EmptyMessage
-              title="This club is not linked to the live data feed yet."
-              description="Add the club's data-provider reference in the import file to see fixtures and results."
-            />
-          ) : teamMatches.isLoading ? (
-            <LoadingState label="Loading your club's matches…" />
-          ) : (
-            <div className="space-y-3">
-              {live.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {live.map((match) => (
-                    <MatchCard key={match.id} match={match} />
-                  ))}
-                </div>
               ) : null}
 
-              {previous || next ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <FixtureSummaryCard label="Last match" match={previous ?? null} teamSlug={slug} />
-                  <FixtureSummaryCard
-                    label="Next fixture"
-                    match={next ?? null}
-                    teamSlug={slug}
-                    variant="fixture"
+              <CardBody className="relative space-y-4 p-4 sm:p-5">
+                <div className="flex items-center gap-3">
+                  <TeamBadge
+                    team={{
+                      name: favourite.data.teamName,
+                      shortName: favourite.data.shortName,
+                      logo: clubBackgroundImage,
+                    }}
+                    size="md"
                   />
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Your club
+                    </p>
+                    <h2 className="truncate text-lg font-semibold sm:text-xl">
+                      {favourite.data.teamName}
+                    </h2>
+                  </div>
+                  <Link
+                    to="/profile"
+                    className="ml-auto shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    Change
+                  </Link>
                 </div>
-              ) : live.length === 0 ? (
-                <EmptyMessage title="No fixtures available." />
-              ) : null}
-            </div>
-          )}
-          <LiveDataFooter meta={teamMatches.meta} />
-        </section>
-      )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <StatTile label="Position" value={row ? String(row.position) : "—"} />
+                  <StatTile label="Points" value={row ? String(row.points) : "—"} />
+                </div>
+              </CardBody>
+            </Card>
+
+            {!slug ? (
+              <EmptyMessage
+                title="This club is not linked to the live data feed yet."
+                description="Add the club's data-provider reference in the import file to see fixtures and results."
+              />
+            ) : teamMatches.isLoading ? (
+              <LoadingState label="Loading your club's matches…" />
+            ) : (
+              <div className="space-y-3">
+                {live.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {live.map((match) => (
+                      <MatchCard key={match.id} match={match} />
+                    ))}
+                  </div>
+                ) : null}
+
+                {previous || next ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <FixtureSummaryCard
+                      label="Last match"
+                      match={previous ?? null}
+                      teamSlug={slug}
+                    />
+                    <FixtureSummaryCard
+                      label="Next fixture"
+                      match={next ?? null}
+                      teamSlug={slug}
+                      variant="fixture"
+                    />
+                  </div>
+                ) : live.length === 0 ? (
+                  <EmptyMessage title="No fixtures available." />
+                ) : null}
+              </div>
+            )}
+            <LiveDataFooter meta={teamMatches.meta} />
+          </section>
+        )}
+      </div>
 
       <section>
         <SectionHeader title="News" to="/news" icon={Newspaper} compact />
@@ -187,7 +223,12 @@ export function HomeScreen() {
         ) : scorers.rows.length === 0 ? (
           <EmptyMessage title="No statistics available." />
         ) : (
-          <StatLeaderCarousel rows={scorers.rows} valueKey="goals" valueLabel="Goals" />
+          <StatLeaderCarousel
+            rows={scorers.rows}
+            valueKey="goals"
+            valueLabel="Goals"
+            playerIdBySlug={playerIdBySlug}
+          />
         )}
         <LiveDataFooter meta={scorers.meta} />
       </section>
@@ -205,7 +246,12 @@ export function HomeScreen() {
         ) : assists.rows.length === 0 ? (
           <EmptyMessage title="No statistics available." />
         ) : (
-          <StatLeaderCarousel rows={assists.rows} valueKey="assists" valueLabel="Assists" />
+          <StatLeaderCarousel
+            rows={assists.rows}
+            valueKey="assists"
+            valueLabel="Assists"
+            playerIdBySlug={playerIdBySlug}
+          />
         )}
         <LiveDataFooter meta={assists.meta} />
       </section>
