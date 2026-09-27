@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, ErrorMessage, LoadingState } from "@/components/common/DataState";
@@ -14,6 +15,7 @@ const STATS = [
 export function TopScorersTable() {
   const [stat, setStat] = useState<"goals" | "assists">("goals");
   const { rows, isLoading, isError, meta, refetch } = useTopScorers(stat);
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-3">
@@ -45,24 +47,63 @@ export function TopScorersTable() {
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="text-[11px] uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th scope="col" className="py-2 pr-3 font-medium">#</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Player</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Club</th>
-                  <th scope="col" className="py-2 pr-2 text-right font-medium">Goals</th>
-                  <th scope="col" className="py-2 pr-2 text-right font-medium">Assists</th>
-                  <th scope="col" className="py-2 pr-2 text-right font-medium">Apps</th>
-                  <th scope="col" className="py-2 text-right font-medium">Minutes</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">
+                    #
+                  </th>
+                  <th scope="col" className="py-2 pr-3 font-medium">
+                    Player
+                  </th>
+                  <th scope="col" className="py-2 pr-3 font-medium">
+                    Club
+                  </th>
+                  <th scope="col" className="py-2 pr-2 text-right font-medium">
+                    Goals
+                  </th>
+                  <th scope="col" className="py-2 pr-2 text-right font-medium">
+                    Assists
+                  </th>
+                  <th scope="col" className="py-2 pr-2 text-right font-medium">
+                    Apps
+                  </th>
+                  <th scope="col" className="py-2 text-right font-medium">
+                    Minutes
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.playerSlug} className="border-t border-border">
+                  // Every row links to /players/provider/$slug — it resolves to
+                  // the full profile when the player is linked in master data,
+                  // or a provider-only profile otherwise (see PlayerBySlugScreen).
+                  // The row itself is clickable (onClick + cursor-pointer) and
+                  // the player's name is also a real <Link> for keyboard/SEO access.
+                  <tr
+                    key={row.playerSlug}
+                    onClick={() =>
+                      void navigate({
+                        to: "/players/provider/$slug",
+                        params: { slug: row.playerSlug },
+                      })
+                    }
+                    className="cursor-pointer border-t border-border transition-colors hover:bg-secondary/60"
+                  >
                     <td className="py-2.5 pr-3 tabular-nums text-muted-foreground">{row.rank}</td>
-                    <td className="py-2.5 pr-3 font-medium">{row.playerName}</td>
+                    <td className="py-2.5 pr-3 font-medium">
+                      <Link
+                        to="/players/provider/$slug"
+                        params={{ slug: row.playerSlug }}
+                        onClick={(event) => event.stopPropagation()}
+                        className="hover:underline"
+                      >
+                        {row.playerName}
+                      </Link>
+                    </td>
                     <td className="py-2.5 pr-3 text-muted-foreground">{row.teamName}</td>
                     <td className="py-2.5 pr-2 text-right tabular-nums">{row.goals ?? "—"}</td>
                     <td className="py-2.5 pr-2 text-right tabular-nums">{row.assists ?? "—"}</td>
-                    <td className="py-2.5 pr-2 text-right tabular-nums">{row.appearances ?? "—"}</td>
+                    <td className="py-2.5 pr-2 text-right tabular-nums">
+                      {row.appearances ?? "—"}
+                    </td>
                     <td className="py-2.5 text-right tabular-nums">{row.minutes ?? "—"}</td>
                   </tr>
                 ))}
