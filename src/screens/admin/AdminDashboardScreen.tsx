@@ -4,11 +4,12 @@ import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useImportHistory, usePlayers, useTeams } from "@/hooks/useMasterData";
+import { useImportHistory, usePlayers, useStaff, useTeams } from "@/hooks/useMasterData";
 
 export function AdminDashboardScreen() {
   const teams = useTeams();
   const players = usePlayers();
+  const staff = useStaff();
   const imports = useImportHistory();
 
   const history = imports.data ?? [];
@@ -21,9 +22,10 @@ export function AdminDashboardScreen() {
         subtitle="Clubs and players come from the WorldFootball export. Match statistics come from SportScore."
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <StatTile label="Clubs imported" value={String(teams.data?.length ?? 0)} />
         <StatTile label="Players imported" value={String(players.data?.length ?? 0)} />
+        <StatTile label="Staff added" value={String(staff.data?.length ?? 0)} />
         <StatTile
           label="Last import"
           value={lastImport ? new Date(lastImport.importedAt).toLocaleDateString() : "Never"}

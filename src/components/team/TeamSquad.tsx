@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { Card, CardBody } from "@/components/common/Card";
-import { EmptyMessage, LoadingState } from "@/components/common/DataState";
+import { EmptyMessage, ErrorMessage, LoadingState } from "@/components/common/DataState";
 import { usePlayers } from "@/hooks/useMasterData";
 import type { MasterPlayer, PlayerPosition } from "@/types/master";
 
@@ -33,7 +33,7 @@ function SquadRow({ player }: { player: MasterPlayer }) {
 
 /** Imported squad for one club, grouped by position. Empty until players are imported. */
 export function TeamSquad({ teamId }: { teamId: string | null }) {
-  const { data, isLoading } = usePlayers(teamId ? { teamId } : {});
+  const { data, isLoading, isError, error, refetch } = usePlayers(teamId ? { teamId } : {});
 
   if (!teamId) {
     return (
@@ -44,6 +44,15 @@ export function TeamSquad({ teamId }: { teamId: string | null }) {
     );
   }
   if (isLoading) return <LoadingState label="Loading squad…" />;
+  if (isError) {
+    return (
+      <ErrorMessage
+        title="Squad could not be loaded."
+        detail={error instanceof Error ? error.message : null}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
 
   const players = data ?? [];
   if (players.length === 0) {

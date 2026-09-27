@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import {
   getPlayerById,
+  getStaffById,
   getTeamById,
   isAdmin,
   listImports,
   listPlayers,
+  listStaff,
   listTeams,
 } from "@/services/masterDataService";
 
@@ -54,6 +56,26 @@ export function usePlayer(playerId: string | null | undefined) {
     queryKey: ["master", "player", playerId],
     queryFn: () => getPlayerById(db!, playerId!),
     enabled: Boolean(db && playerId),
+    staleTime: MASTER_STALE_TIME,
+  });
+}
+
+export function useStaff(options: { teamId?: string } = {}) {
+  const { db } = useFirestore();
+  return useQuery({
+    queryKey: ["master", "staff", options.teamId ?? "all"],
+    queryFn: () => listStaff(db!, options),
+    enabled: Boolean(db),
+    staleTime: MASTER_STALE_TIME,
+  });
+}
+
+export function useStaffMember(staffId: string | null | undefined) {
+  const { db } = useFirestore();
+  return useQuery({
+    queryKey: ["master", "staffMember", staffId],
+    queryFn: () => getStaffById(db!, staffId!),
+    enabled: Boolean(db && staffId),
     staleTime: MASTER_STALE_TIME,
   });
 }

@@ -17,7 +17,7 @@ import {
 
 import type { Article, Video } from "@/types";
 import { SQUAD_RULES } from "@/types/fantasy";
-import type { MasterPlayer, MasterTeam } from "@/types/master";
+import type { MasterPlayer, MasterStaff, MasterTeam } from "@/types/master";
 import { COLLECTIONS } from "./masterDataService";
 
 /* ------------------------------ fantasy settings ----------------------------- */
@@ -64,6 +64,16 @@ export async function savePlayer(db: Firestore, player: MasterPlayer): Promise<v
 
 export async function deletePlayer(db: Firestore, playerId: string): Promise<void> {
   await deleteDoc(doc(db, COLLECTIONS.players, playerId));
+}
+
+/* --------------------------------- staff -------------------------------- */
+
+export async function saveStaff(db: Firestore, staff: MasterStaff): Promise<void> {
+  await setDoc(doc(db, COLLECTIONS.staff, staff.staffId), staff, { merge: true });
+}
+
+export async function deleteStaff(db: Firestore, staffId: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.staff, staffId));
 }
 
 /* ---------------------------------- content ---------------------------------- */

@@ -12,6 +12,7 @@ import { MatchLineups, MatchTimeline } from "@/components/match/MatchTimeline";
 import { StandingsTable } from "@/components/match/StandingsTable";
 import { StatTile } from "@/components/fantasy/StatTile";
 import { TeamSquad } from "@/components/team/TeamSquad";
+import { TeamStaff } from "@/components/team/TeamStaff";
 import { useTeams } from "@/hooks/useMasterData";
 import { useStandings, useTeamMatches } from "@/hooks/useSportsData";
 import { nameKey } from "@/services/sportscore/normalize";
@@ -66,7 +67,11 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
 
       <div className="flex items-center gap-4">
         <TeamBadge
-          team={{ name: displayName, shortName: providerTeam?.shortName ?? null, logo: providerTeam?.logo ?? null }}
+          team={{
+            name: displayName,
+            shortName: providerTeam?.shortName ?? null,
+            logo: providerTeam?.logo ?? null,
+          }}
           size="lg"
         />
         <div>
@@ -115,6 +120,11 @@ export function TeamMatchCenterScreen({ teamId }: { teamId: string }) {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Squad</h2>
         <TeamSquad teamId={masterTeam?.teamId ?? null} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Technical staff</h2>
+        <TeamStaff teamId={masterTeam?.teamId ?? null} />
       </section>
 
       <section className="space-y-3">

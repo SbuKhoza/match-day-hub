@@ -8,6 +8,7 @@ import {
   Settings,
   Shield,
   Shirt,
+  UserCog,
   Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -19,6 +20,7 @@ export const ADMIN_NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/teams", label: "Clubs", icon: Shield },
   { to: "/admin/players", label: "Players", icon: Shirt },
+  { to: "/admin/staff", label: "Staff", icon: UserCog },
   { to: "/admin/import", label: "CSV import", icon: FileUp },
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/videos", label: "Videos", icon: Play },
@@ -88,7 +90,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
           <nav className="flex gap-1 overflow-x-auto px-3 pb-2">{links}</nav>
         </header>
-        <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:pt-10">{children}</main>
+        <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:pt-10">
+          {children}
+        </main>
       </div>
     </div>
   );

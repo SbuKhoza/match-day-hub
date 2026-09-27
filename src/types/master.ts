@@ -57,6 +57,44 @@ export interface MasterPlayer {
   updatedAt: string;
 }
 
+/** Technical/coaching staff roles. "Other" pairs with a free-text `roleRaw`. */
+export const STAFF_ROLES = [
+  "Manager",
+  "Head Coach",
+  "Assistant Coach",
+  "Goalkeeper Coach",
+  "Fitness Coach",
+  "Technical Director",
+  "Team Doctor",
+  "Physiotherapist",
+  "Kit Manager",
+  "Performance Analyst",
+  "Scout",
+  "Other",
+] as const;
+
+export type StaffRole = (typeof STAFF_ROLES)[number];
+
+/** Master technical staff record — coaches and other non-playing club staff. */
+export interface MasterStaff {
+  staffId: string;
+  fullName: string;
+  fullNameNormalized: string;
+  teamId: string;
+  teamName: string;
+  role: StaffRole;
+  /** Free-text label used when role is "Other". */
+  roleRaw: string | null;
+  nationality: string | null;
+  dateOfBirth: string | null;
+  photoUrl: string | null;
+  season: string;
+  active: boolean;
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PlayerTransferRecord {
   transferId: string;
   playerId: string;

@@ -22,6 +22,7 @@ import {
 import type {
   DataImportRecord,
   MasterPlayer,
+  MasterStaff,
   MasterTeam,
   PlayerTransferRecord,
 } from "@/types/master";
@@ -29,6 +30,7 @@ import type {
 export const COLLECTIONS = {
   teams: "teams",
   players: "players",
+  staff: "staff",
   playerTransfers: "playerTransfers",
   matches: "matches",
   matchEvents: "matchEvents",
@@ -55,18 +57,44 @@ export async function listPlayers(
   db: Firestore,
   options: { teamId?: string; max?: number } = {},
 ): Promise<MasterPlayer[]> {
-  const constraints = [
-    ...(options.teamId ? [where("teamId", "==", options.teamId)] : []),
-    orderBy("playerName"),
-    ...(options.max ? [fsLimit(options.max)] : []),
-  ];
+  // A `where("teamId", ...)` filter combined with `orderBy("playerName")` in the
+  // same query needs a Firestore composite index. That index was never deployed,
+  // so any team-filtered fetch silently failed and every "Squad" section on a
+  // club page rendered as empty, even though the players existed. Sorting on
+  // the client instead of in the query sidesteps the missing-index requirement
+  // entirely (it only needs Firestore's automatic single-field index on teamId).
+  const constraints = options.teamId
+    ? [where("teamId", "==", options.teamId)]
+    : [orderBy("playerName"), ...(options.max ? [fsLimit(options.max)] : [])];
   const snapshot = await getDocs(query(collection(db, COLLECTIONS.players), ...constraints));
-  return snapshot.docs.map((entry) => entry.data() as MasterPlayer);
+  const players = snapshot.docs.map((entry) => entry.data() as MasterPlayer);
+  if (!options.teamId) return players;
+  players.sort((a, b) => a.playerName.localeCompare(b.playerName));
+  return options.max ? players.slice(0, options.max) : players;
 }
 
 export async function getPlayerById(db: Firestore, playerId: string): Promise<MasterPlayer | null> {
   const snapshot = await getDoc(doc(db, COLLECTIONS.players, playerId));
   return snapshot.exists() ? (snapshot.data() as MasterPlayer) : null;
+}
+
+/** Same composite-index pitfall as `listPlayers` — see the comment there. */
+export async function listStaff(
+  db: Firestore,
+  options: { teamId?: string } = {},
+): Promise<MasterStaff[]> {
+  const constraints = options.teamId
+    ? [where("teamId", "==", options.teamId)]
+    : [orderBy("fullName")];
+  const snapshot = await getDocs(query(collection(db, COLLECTIONS.staff), ...constraints));
+  const staff = snapshot.docs.map((entry) => entry.data() as MasterStaff);
+  if (options.teamId) staff.sort((a, b) => a.fullName.localeCompare(b.fullName));
+  return staff;
+}
+
+export async function getStaffById(db: Firestore, staffId: string): Promise<MasterStaff | null> {
+  const snapshot = await getDoc(doc(db, COLLECTIONS.staff, staffId));
+  return snapshot.exists() ? (snapshot.data() as MasterStaff) : null;
 }
 
 export async function listImports(db: Firestore, max = 20): Promise<DataImportRecord[]> {
@@ -106,6 +134,13 @@ export async function upsertTeams(db: Firestore, teams: MasterTeam[]): Promise<v
 export async function upsertPlayers(db: Firestore, players: MasterPlayer[]): Promise<void> {
   await commitInChunks(db, players, (batch, player) => {
     batch.set(doc(db, COLLECTIONS.players, player.playerId), player, { merge: true });
+  });
+}
+
+/** Creates or updates staff by stable staffId. */
+export async function upsertStaff(db: Firestore, staff: MasterStaff[]): Promise<void> {
+  await commitInChunks(db, staff, (batch, member) => {
+    batch.set(doc(db, COLLECTIONS.staff, member.staffId), member, { merge: true });
   });
 }
 
