@@ -24,7 +24,7 @@ import { contentService } from "@/services/contentService";
  * Change this one value to adjust it — e.g. "opacity-[0.15]" for a bolder
  * watermark, or "opacity-0" to switch it off entirely without removing the code.
  */
-const CLUB_BACKGROUND_OPACITY = "opacity-[0.05]";
+const CLUB_BACKGROUND_OPACITY = "opacity-[0.09]";
 
 /**
  * Size of the club-crest watermark (mobile, then `sm:` breakpoint).
