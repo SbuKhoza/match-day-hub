@@ -25,7 +25,22 @@ import { contentService } from "@/services/contentService";
  * Change this one value to adjust it — e.g. "opacity-[0.15]" for a bolder
  * watermark, or "opacity-0" to switch it off entirely without removing the code.
  */
-const CLUB_BACKGROUND_OPACITY = "opacity-[0.1]";
+const CLUB_BACKGROUND_OPACITY = "opacity-[0.05]";
+
+/**
+ * Size of the club-crest watermark (mobile, then `sm:` breakpoint).
+ * Increase/decrease these two values together to scale it up or down.
+ */
+const CLUB_BACKGROUND_SIZE = "h-60 w-60 sm:h-72 sm:w-72";
+
+/**
+ * Position of the club-crest watermark, as Tailwind inset utilities.
+ * Kept in the top-right corner but nudged down from the very top edge
+ * (`top-4` instead of a negative offset) so it sits slightly lower over the
+ * card. Increase `top-*` to push it further down, or use a negative value
+ * (e.g. `-top-14`) to pull it back up above the card edge.
+ */
+const CLUB_BACKGROUND_POSITION = "-right-14 top-4";
 
 export function HomeScreen() {
   const { profile, user } = useAuth();
@@ -67,7 +82,12 @@ export function HomeScreen() {
     .sort((a, b) => (a.startTime ?? "").localeCompare(b.startTime ?? ""))[0];
 
   return (
-    <div className="space-y-8">
+    // `-mt-*` pulls this screen up closer to the top nav bar, since the
+    // shared AppShell layout (src/components/layout/AppShell.tsx) applies a
+    // uniform top padding (`pt-6` / `lg:pt-10`) to every screen. This offset
+    // only affects the Home screen — reduce/remove it (or increase it for
+    // more breathing room) by changing the values below.
+    <div className="-mt-4 space-y-8 sm:-mt-6">
       {/*
         Header + favourite-club card grouped in their own tighter `space-y-3`
         wrapper so the gap between the greeting and the club card is smaller
@@ -95,16 +115,15 @@ export function HomeScreen() {
           <section className="space-y-3">
             <Card className="relative">
               {clubBackgroundImage ? (
-                // Faded crest watermark. Purely decorative (aria-hidden) and
-                // pushed further into the top-right corner than the visible
-                // team badge below, so it never sits behind/over the badge.
-                // Opacity is controlled by CLUB_BACKGROUND_OPACITY above.
+                // Faded crest watermark, purely decorative (aria-hidden).
+                // Size / position / opacity are controlled by the
+                // CLUB_BACKGROUND_* constants defined above the component.
                 <img
                   src={clubBackgroundImage}
                   alt=""
                   aria-hidden
                   loading="lazy"
-                  className={`pointer-events-none absolute -right-14 -top-14 h-44 w-44 rotate-6 object-contain blur-[1px] sm:h-52 sm:w-52 ${CLUB_BACKGROUND_OPACITY}`}
+                  className={`pointer-events-none absolute rotate-6 object-contain blur-[1px] ${CLUB_BACKGROUND_POSITION} ${CLUB_BACKGROUND_SIZE} ${CLUB_BACKGROUND_OPACITY}`}
                 />
               ) : null}
 
