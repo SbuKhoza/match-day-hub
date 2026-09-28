@@ -26,7 +26,7 @@ export function TopScorersTable() {
             type="button"
             onClick={() => setStat(item.key)}
             className={cn(
-              "rounded-full border border-border px-3 py-1.5 text-xs font-medium",
+              "rounded-md border border-border px-3 py-1.5 text-xs font-medium",
               stat === item.key ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
             )}
           >

@@ -24,7 +24,7 @@ import { contentService } from "@/services/contentService";
  * Change this one value to adjust it — e.g. "opacity-[0.15]" for a bolder
  * watermark, or "opacity-0" to switch it off entirely without removing the code.
  */
-const CLUB_BACKGROUND_OPACITY = "opacity-[0.09]";
+const CLUB_BACKGROUND_OPACITY = "opacity-[0.05]";
 
 /**
  * Size of the club-crest watermark (mobile, then `sm:` breakpoint).
@@ -73,18 +73,18 @@ export function HomeScreen() {
     // uniform top padding (`pt-6` / `lg:pt-10`) to every screen. This offset
     // only affects the Home screen — reduce/remove it (or increase it for
     // more breathing room) by changing the values below.
-    <div className="-mt-4 space-y-8 sm:-mt-6">
+    <div className="-mt-4 space-y-6 sm:-mt-6">
       {/*
         Header + favourite-club card grouped in their own tighter `space-y-3`
         wrapper so the gap between the greeting and the club card is smaller
-        than the gap between the other sections below (space-y-8 on the
-        outer div). Increase this value (e.g. space-y-6) for more breathing
+        than the gap between the other sections below (space-y-6 on the
+        outer div). Increase this value (e.g. space-y-4) for more breathing
         room between the two.
       */}
       <div className="space-y-3">
         <header>
-          <p className="text-sm text-muted-foreground">Welcome back</p>
-          <h1 className="text-2xl font-semibold sm:text-3xl">{firstName}</h1>
+          <p className="text-xs text-muted-foreground">Welcome back</p>
+          <h1 className="text-xl font-semibold">{firstName}</h1>
         </header>
 
         {!profile?.favoriteTeam || !favourite.data ? (
@@ -109,11 +109,11 @@ export function HomeScreen() {
                   alt=""
                   aria-hidden
                   loading="lazy"
-                  className={`pointer-events-none absolute rotate-6 object-contain blur-[1px] ${CLUB_BACKGROUND_POSITION} ${CLUB_BACKGROUND_SIZE} ${CLUB_BACKGROUND_OPACITY}`}
+                  className={`pointer-events-none absolute object-contain ${CLUB_BACKGROUND_POSITION} ${CLUB_BACKGROUND_SIZE} ${CLUB_BACKGROUND_OPACITY}`}
                 />
               ) : null}
 
-              <CardBody className="relative space-y-4 p-4 sm:p-5">
+              <CardBody className="relative space-y-3 p-4">
                 <div className="flex items-center gap-3">
                   <TeamBadge
                     team={{
@@ -124,12 +124,10 @@ export function HomeScreen() {
                     size="md"
                   />
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       Your club
                     </p>
-                    <h2 className="truncate text-lg font-semibold sm:text-xl">
-                      {favourite.data.teamName}
-                    </h2>
+                    <h2 className="truncate text-base font-semibold">{favourite.data.teamName}</h2>
                   </div>
                   <Link
                     to="/profile"
@@ -216,13 +214,7 @@ export function HomeScreen() {
       </section>
 
       <section>
-        <SectionHeader
-          title="Top scorer"
-          to="/match-center"
-          linkLabel="See all"
-          icon={Target}
-          compact
-        />
+        <SectionHeader title="Top scorer" to="/stats" linkLabel="See all" icon={Target} compact />
         {scorers.isLoading ? (
           <LoadingState label="Loading top scorers…" />
         ) : scorers.rows.length === 0 ? (
@@ -234,13 +226,7 @@ export function HomeScreen() {
       </section>
 
       <section>
-        <SectionHeader
-          title="Assists"
-          to="/match-center"
-          linkLabel="See all"
-          icon={Handshake}
-          compact
-        />
+        <SectionHeader title="Assists" to="/stats" linkLabel="See all" icon={Handshake} compact />
         {assists.isLoading ? (
           <LoadingState label="Loading assists…" />
         ) : assists.rows.length === 0 ? (

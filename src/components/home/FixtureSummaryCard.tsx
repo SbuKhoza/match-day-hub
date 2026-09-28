@@ -35,9 +35,9 @@ export function FixtureSummaryCard({
   return (
     <Link to="/match-center/$teamId" params={{ teamId: teamSlug }} className="block h-full">
       <Card className="h-full transition-shadow hover:shadow-lifted">
-        <CardBody className="flex h-full flex-col gap-3 p-4">
+        <CardBody className="flex h-full flex-col gap-2.5 p-3">
           <div className="flex items-start justify-between gap-2">
-            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <CalendarDays className="h-3.5 w-3.5" aria-hidden />
               {label}
             </span>
@@ -60,7 +60,7 @@ export function FixtureSummaryCard({
                   </span>
                 </div>
 
-                <span className="shrink-0 px-1 text-lg font-semibold tabular-nums">
+                <span className="shrink-0 px-1 text-base font-semibold tabular-nums">
                   {hasScore ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}` : "-"}
                 </span>
 
@@ -72,7 +72,7 @@ export function FixtureSummaryCard({
                 </div>
               </div>
 
-              <span className="inline-flex w-fit rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium">
+              <span className="inline-flex w-fit rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium">
                 {statusChip(match)}
               </span>
             </>

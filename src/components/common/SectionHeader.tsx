@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export function SectionHeader({
@@ -9,6 +9,7 @@ export function SectionHeader({
   linkLabel = "View all",
   icon: Icon,
   compact = false,
+  large = false,
 }: {
   title: string;
   subtitle?: string;
@@ -19,21 +20,33 @@ export function SectionHeader({
   icon?: LucideIcon;
   /** Tighter, single-row layout with a small text link instead of a pill button. */
   compact?: boolean;
+  /** With `compact`: larger sentence-case title and icon (used on the Fantasy screen). */
+  large?: boolean;
 }) {
   if (compact) {
     return (
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {Icon ? <Icon className="h-4 w-4 text-muted-foreground" aria-hidden /> : null}
-          <h2 className="text-sm font-semibold uppercase tracking-wide">{title}</h2>
+          {Icon ? (
+            <Icon className={large ? "h-5 w-5" : "h-4 w-4 text-muted-foreground"} aria-hidden />
+          ) : null}
+          <h2
+            className={
+              large
+                ? "text-base font-semibold"
+                : "text-[13px] font-semibold uppercase tracking-wide"
+            }
+          >
+            {title}
+          </h2>
         </div>
         {to ? (
           <Link
             to={to as never}
-            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             {linkLabel}
-            <ArrowRight className="h-3.5 w-3.5" />
+            {large ? <ChevronRight className="h-4 w-4" /> : <ArrowRight className="h-3.5 w-3.5" />}
           </Link>
         ) : null}
       </div>
@@ -43,13 +56,13 @@ export function SectionHeader({
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
-        <h2 className="text-xl font-semibold sm:text-2xl">{title}</h2>
+        <h2 className="text-lg font-semibold sm:text-xl">{title}</h2>
         {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>
       {to ? (
         <Link
           to={to as never}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-secondary"
         >
           {linkLabel}
           <ArrowRight className="h-4 w-4" />

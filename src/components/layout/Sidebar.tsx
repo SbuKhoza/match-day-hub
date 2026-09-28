@@ -12,10 +12,10 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 lg:flex">
       <Link to="/" className="mb-8 flex items-center gap-3 px-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
-          KO
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-xs font-bold tracking-tight text-primary-foreground">
+          PSL
         </span>
-        <span className="text-lg font-semibold tracking-tight">Kickoff</span>
+        <span className="text-base font-semibold tracking-tight">Premier Soccer League</span>
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1">

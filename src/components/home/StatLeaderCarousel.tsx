@@ -30,12 +30,12 @@ export function StatLeaderCarousel({
         // card is always clickable, never a dead end. See PlayerBySlugScreen.
         <Link key={row.playerSlug} to="/players/provider/$slug" params={{ slug: row.playerSlug }}>
           <Card className="transition-shadow hover:shadow-lifted">
-            <CardBody className="flex items-center gap-3 p-4">
+            <CardBody className="flex items-center gap-3 p-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold tabular-nums">
                 {row.rank}
               </span>
 
-              <span className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-secondary">
+              <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-secondary">
                 {row.photo ? (
                   <img
                     src={row.photo}
@@ -61,7 +61,7 @@ export function StatLeaderCarousel({
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="text-xl font-semibold tabular-nums">{row[valueKey]}</p>
+                <p className="text-lg font-semibold tabular-nums">{row[valueKey]}</p>
                 <p className="text-[11px] text-muted-foreground">{valueLabel}</p>
               </div>
             </CardBody>
