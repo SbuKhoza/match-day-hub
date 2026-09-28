@@ -21,6 +21,7 @@ import {
   setCaptain,
   setViceCaptain,
   substitute,
+  swapBlockedReason,
   type Lineup,
 } from "@/services/lineupService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player } from "@/types/fantasy";
@@ -152,8 +153,9 @@ export function LineupScreen() {
     const sameGroup = lineup.starters.includes(player.id) === selectedIsStarter;
     if (sameGroup) {
       setSelectedId(player.id); // just change the selection
-    } else {
-      setNotice("That swap isn't allowed — it would leave an invalid formation.");
+    } else if (selected) {
+      const [starter, sub] = selectedIsStarter ? [selected, player] : [player, selected];
+      setNotice(swapBlockedReason(starter, sub, squad, lineup.starters));
     }
   }
 

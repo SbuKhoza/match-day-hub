@@ -1,11 +1,14 @@
 import type { FantasyTeam, Gameweek, Player, PlayerPosition } from "@/types/fantasy";
 
-/** Allowed number of starters per position in the XI (11 players in total). */
+/**
+ * Rules for the XI (11 players in total): exactly one goalkeeper and at least three defenders.
+ * Midfielders and forwards are unrestricted, so the formation is whatever the user lines up.
+ */
 export const FORMATION_LIMITS: Record<PlayerPosition, { min: number; max: number }> = {
   GK: { min: 1, max: 1 },
-  DEF: { min: 3, max: 5 },
-  MID: { min: 2, max: 5 },
-  FWD: { min: 1, max: 3 },
+  DEF: { min: 3, max: 10 },
+  MID: { min: 0, max: 10 },
+  FWD: { min: 0, max: 10 },
 };
 
 export const POSITION_ORDER: PlayerPosition[] = ["GK", "DEF", "MID", "FWD"];
@@ -41,8 +44,9 @@ export function isFormationValid(starters: Player[]): boolean {
 }
 
 /**
- * Can `benchPlayer` replace `starter`? Both must already be in the squad; a like-for-like swap
- * never changes the formation, and a cross-position swap must leave a legal formation.
+ * Can `benchPlayer` replace `starter`? Both must already be in the squad. A goalkeeper can only
+ * be swapped with a goalkeeper; any outfield player can be swapped with any other outfield
+ * player as long as at least three defenders remain in the XI.
  */
 export function canSubstitute(
   starter: Player,
@@ -57,6 +61,20 @@ export function canSubstitute(
 
   const next = squad.filter((p) => (p.id === starter.id ? false : starters.includes(p.id)));
   return isFormationValid([...next, benchPlayer]);
+}
+
+/** Human-readable reason a starter/sub pair can't be swapped (null when the swap is fine). */
+export function swapBlockedReason(
+  starter: Player,
+  benchPlayer: Player,
+  squad: Player[],
+  starters: string[],
+): string | null {
+  if (canSubstitute(starter, benchPlayer, squad, starters)) return null;
+  if ((starter.position === "GK") !== (benchPlayer.position === "GK")) {
+    return "A goalkeeper can only be swapped with another goalkeeper.";
+  }
+  return "That swap would leave fewer than 3 defenders in your line-up.";
 }
 
 /** Applies a substitution. The armband passes to the incoming player if the captain goes off. */
