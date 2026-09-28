@@ -1,4 +1,5 @@
 import { Minus, Plus } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { formatRand } from "@/utils/format";
@@ -64,19 +65,27 @@ export interface PitchProps {
   className?: string;
 }
 
-function PlayerCard({
+export function PlayerCard({
   player,
   starting,
   captain,
+  vice = false,
   selected,
   out,
+  target = false,
+  dimmed = false,
   onClick,
 }: {
   player: Player;
   starting: boolean;
   captain: boolean;
+  vice?: boolean;
   selected: boolean;
   out: boolean;
+  /** Valid swap partner for the currently selected player. */
+  target?: boolean;
+  /** Not a valid swap partner while another player is selected. */
+  dimmed?: boolean;
   onClick?: ((player: Player) => void) | undefined;
 }) {
   return (
@@ -90,6 +99,8 @@ function PlayerCard({
       className={cn(
         "group relative flex w-full min-w-0 flex-col items-center rounded-md pt-1 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-white enabled:hover:-translate-y-0.5",
         !starting && "opacity-75",
+        dimmed && "opacity-40",
+        target && "bg-white/20 ring-2 ring-yellow-300 animate-pulse",
         (selected || out) && "bg-white/15 ring-2 ring-white",
         out && "ring-[oklch(0.7_0.2_25)]",
       )}
@@ -99,6 +110,11 @@ function PlayerCard({
         {captain ? (
           <span className="absolute -right-1.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-neutral-900 shadow">
             C
+          </span>
+        ) : null}
+        {vice && !captain ? (
+          <span className="absolute -right-1.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[9px] font-bold text-white shadow ring-1 ring-white">
+            V
           </span>
         ) : null}
         {out ? (
@@ -142,20 +158,14 @@ function EmptySlot({
   );
 }
 
-/**
- * A football pitch showing the whole squad row by row (GK at the top, forwards at the bottom).
- * Unfilled slots render as "+" placeholders per position.
- */
-export function Pitch({
-  squad,
-  starters,
-  captainId = null,
-  selectedId = null,
-  outId = null,
-  onPlayerClick,
-  onEmptyClick,
+/** Grass, stripes and markings. Children are laid over the pitch. */
+export function PitchSurface({
   className,
-}: PitchProps) {
+  children,
+}: {
+  className?: string | undefined;
+  children: ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -177,6 +187,27 @@ export function Pitch({
         <div className="absolute bottom-2 left-1/2 aspect-square w-[28%] -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white/60 sm:bottom-3" />
       </div>
 
+      {children}
+    </div>
+  );
+}
+
+/**
+ * A football pitch showing the whole squad row by row (GK at the top, forwards at the bottom).
+ * Unfilled slots render as "+" placeholders per position.
+ */
+export function Pitch({
+  squad,
+  starters,
+  captainId = null,
+  selectedId = null,
+  outId = null,
+  onPlayerClick,
+  onEmptyClick,
+  className,
+}: PitchProps) {
+  return (
+    <PitchSurface className={className}>
       <div className="flex flex-col gap-3 sm:gap-5">
         {ROWS.map((position) => {
           const inRow = squad.filter((player) => player.position === position);
@@ -210,6 +241,6 @@ export function Pitch({
           );
         })}
       </div>
-    </div>
+    </PitchSurface>
   );
 }

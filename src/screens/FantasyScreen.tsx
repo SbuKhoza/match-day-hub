@@ -54,7 +54,8 @@ const STRIPE_MASK = "linear-gradient(to right, transparent, black 65%)";
 const CAROUSEL_SLIDE = "w-[84%] sm:w-[28rem]";
 
 const LINKS = [
-  { to: "/fantasy/team", label: "My Team", icon: Users, hint: "Build and manage your squad" },
+  { to: "/fantasy/lineup", label: "My Line-up", icon: Users, hint: "Pick your XI and subs" },
+  { to: "/fantasy/team", label: "Team Builder", icon: Users, hint: "Build your 17-player squad" },
   { to: "/fantasy/leagues", label: "My Leagues", icon: Trophy, hint: "Create, join and compare" },
   {
     to: "/fantasy/transfers",
@@ -145,7 +146,7 @@ export function FantasyScreen() {
           <div className="h-[76px] animate-pulse rounded-lg bg-muted" />
         ) : team ? (
           <FantasyNavCard
-            to="/fantasy/team"
+            to="/fantasy/lineup"
             icon={Users}
             label="My team"
             title={team.name}

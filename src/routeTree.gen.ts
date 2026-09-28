@@ -30,6 +30,7 @@ import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as FantasyIndexRouteImport } from './routes/fantasy.index'
+import { Route as FantasyLineupRouteImport } from './routes/fantasy.lineup'
 import { Route as FantasyPointsRouteImport } from './routes/fantasy.points'
 import { Route as FantasyTeamRouteImport } from './routes/fantasy.team'
 import { Route as FantasyTransfersRouteImport } from './routes/fantasy.transfers'
@@ -146,6 +147,11 @@ const FantasyIndexRoute = FantasyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FantasyRoute,
 } as any)
+const FantasyLineupRoute = FantasyLineupRouteImport.update({
+  id: '/lineup',
+  path: '/lineup',
+  getParentRoute: () => FantasyRoute,
+} as any)
 const FantasyPointsRoute = FantasyPointsRouteImport.update({
   id: '/points',
   path: '/points',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/admin/teams': typeof AdminTeamsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/fantasy/lineup': typeof FantasyLineupRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/admin/teams': typeof AdminTeamsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/fantasy/lineup': typeof FantasyLineupRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/admin/teams': typeof AdminTeamsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/fantasy/lineup': typeof FantasyLineupRoute
   '/fantasy/points': typeof FantasyPointsRoute
   '/fantasy/team': typeof FantasyTeamRoute
   '/fantasy/transfers': typeof FantasyTransfersRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/admin/users'
     | '/admin/videos'
+    | '/fantasy/lineup'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/admin/users'
     | '/admin/videos'
+    | '/fantasy/lineup'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/admin/users'
     | '/admin/videos'
+    | '/fantasy/lineup'
     | '/fantasy/points'
     | '/fantasy/team'
     | '/fantasy/transfers'
@@ -559,6 +571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FantasyIndexRouteImport
       parentRoute: typeof FantasyRoute
     }
+    '/fantasy/lineup': {
+      id: '/fantasy/lineup'
+      path: '/lineup'
+      fullPath: '/fantasy/lineup'
+      preLoaderRoute: typeof FantasyLineupRouteImport
+      parentRoute: typeof FantasyRoute
+    }
     '/fantasy/points': {
       id: '/fantasy/points'
       path: '/points'
@@ -659,6 +678,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface FantasyRouteChildren {
+  FantasyLineupRoute: typeof FantasyLineupRoute
   FantasyPointsRoute: typeof FantasyPointsRoute
   FantasyTeamRoute: typeof FantasyTeamRoute
   FantasyTransfersRoute: typeof FantasyTransfersRoute
@@ -668,6 +688,7 @@ interface FantasyRouteChildren {
 }
 
 const FantasyRouteChildren: FantasyRouteChildren = {
+  FantasyLineupRoute: FantasyLineupRoute,
   FantasyPointsRoute: FantasyPointsRoute,
   FantasyTeamRoute: FantasyTeamRoute,
   FantasyTransfersRoute: FantasyTransfersRoute,
