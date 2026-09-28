@@ -1,17 +1,25 @@
 import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Users } from "lucide-react";
+import { AlertCircle, CheckCircle2, Plus, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
+import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
-import { SquadList } from "@/components/fantasy/SquadList";
 import { StatTile } from "@/components/fantasy/StatTile";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers } from "@/hooks/useFantasy";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
@@ -26,11 +34,14 @@ export function TeamBuilderScreen() {
   const { data: existing } = useFantasyTeam();
   const { data: gameweek } = useGameweek();
   const { budget } = useFantasySettings();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [name, setName] = useState("");
   const [squadIds, setSquadIds] = useState<string[]>([]);
   const [starters, setStarters] = useState<string[]>([]);
   const [captainId, setCaptainId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [poolOpen, setPoolOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [filters, setFilters] = useState<PlayerFilterState>({
     search: "",
@@ -49,6 +60,7 @@ export function TeamBuilderScreen() {
 
   const squad = squadIds.map((id) => byId.get(id)).filter(Boolean) as Player[];
   const validation = validateSquad(squad, starters, budget);
+  const selected = selectedId ? byId.get(selectedId) : undefined;
   const clubCounts = useMemo(() => {
     const counts = new Map<string, number>();
     squad.forEach((player) => counts.set(player.clubId, (counts.get(player.clubId) ?? 0) + 1));
@@ -79,6 +91,7 @@ export function TeamBuilderScreen() {
       setSquadIds((prev) => prev.filter((id) => id !== player.id));
       setStarters((prev) => prev.filter((id) => id !== player.id));
       setCaptainId((prev) => (prev === player.id ? null : prev));
+      setSelectedId((prev) => (prev === player.id ? null : prev));
       return;
     }
     if (!canAdd(player)) return;
@@ -92,6 +105,13 @@ export function TeamBuilderScreen() {
       if (prev.length >= SQUAD_RULES.starters) return prev;
       return [...prev, playerId];
     });
+    // A benched player can't be captain.
+    setCaptainId((prev) => (prev === playerId && starters.includes(playerId) ? null : prev));
+  }
+
+  function openPoolFor(position: PlayerPosition | "ALL") {
+    setFilters((prev) => ({ ...prev, position }));
+    setPoolOpen(true);
   }
 
   const save = useMutation({
@@ -130,104 +150,146 @@ export function TeamBuilderScreen() {
     );
   }
 
+  const pool = (
+    <div className="space-y-4">
+      <PlayerFilters
+        value={filters}
+        onChange={setFilters}
+        priceCeiling={PRICE_CEILING}
+        clubs={clubs}
+      />
+      <div className={isDesktop ? "max-h-[640px] space-y-2 overflow-y-auto pr-1" : "space-y-2"}>
+        {visible.map((player) => (
+          <PlayerRow
+            key={player.id}
+            player={player}
+            selected={squadIds.includes(player.id)}
+            disabled={!canAdd(player)}
+            onToggle={togglePlayer}
+          />
+        ))}
+        {visible.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No players match those filters.
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  const selectedStarting = selected ? starters.includes(selected.id) : false;
+
   return (
     <div className="space-y-6">
       <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Remaining budget" value={formatRand(validation.remaining)} />
-        <StatTile label="Squad" value={`${squadIds.length}/${SQUAD_SIZE}`} hint={`${SQUAD_SIZE - squadIds.length} slots left`} />
+        <StatTile
+          label="Squad"
+          value={`${squadIds.length}/${SQUAD_SIZE}`}
+          hint={`${SQUAD_SIZE - squadIds.length} slots left`}
+        />
         <StatTile label="Starting XI" value={`${starters.length}/${SQUAD_RULES.starters}`} />
         <StatTile
           label="Formation"
           value={POSITION_ORDER.slice(1)
-            .map((position) => squad.filter((p) => p.position === position && starters.includes(p.id)).length)
+            .map(
+              (position) =>
+                squad.filter((p) => p.position === position && starters.includes(p.id)).length,
+            )
             .join("-")}
           hint="DEF-MID-FWD in your XI"
         />
       </div>
 
-      <Card>
-        <CardBody className="space-y-3">
-          <label className="block text-sm font-medium" htmlFor="team-name">
-            Team name
-          </label>
-          <input
-            id="team-name"
-            value={name}
-            maxLength={40}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="My Fantasy XI"
-            className="h-11 w-full rounded-full border border-border bg-transparent px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <div className="grid gap-2 sm:grid-cols-4">
-            {POSITION_ORDER.map((position) => (
-              <div key={position} className="rounded-2xl border border-border px-3 py-2 text-sm">
-                <span className="text-muted-foreground">{position}</span>{" "}
-                <span className="font-semibold">
-                  {validation.counts[position]}/{SQUAD_RULES.positions[position]}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <Card>
           <CardBody className="space-y-4">
-            <h2 className="text-lg font-semibold">Player pool</h2>
-            <PlayerFilters
-              value={filters}
-              onChange={setFilters}
-              priceCeiling={PRICE_CEILING}
-              clubs={clubs}
-            />
-            <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
-              {visible.map((player) => (
-                <PlayerRow
-                  key={player.id}
-                  player={player}
-                  selected={squadIds.includes(player.id)}
-                  disabled={!canAdd(player)}
-                  onToggle={togglePlayer}
-                />
-              ))}
-              {visible.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No players match those filters.
-                </p>
-              ) : null}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium" htmlFor="team-name">
+                Team name
+              </label>
+              <input
+                id="team-name"
+                value={name}
+                maxLength={40}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="My Fantasy XI"
+                className="h-11 w-full rounded-full border border-border bg-transparent px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
             </div>
-          </CardBody>
-        </Card>
 
-        <Card>
-          <CardBody className="space-y-4">
-            <h2 className="text-lg font-semibold">Selected players</h2>
-            {squad.length === 0 ? (
-              <div className="flex flex-col items-center rounded-2xl border border-dashed border-border py-10 text-center">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Add players from the pool to fill your 17 slots.
-                </p>
+            <div className="grid grid-cols-4 gap-2">
+              {POSITION_ORDER.map((position) => (
+                <div
+                  key={position}
+                  className="rounded-lg border border-border px-2 py-1.5 text-center text-xs sm:text-sm"
+                >
+                  <span className="text-muted-foreground">{position}</span>{" "}
+                  <span className="font-semibold">
+                    {validation.counts[position]}/{SQUAD_RULES.positions[position]}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <Pitch
+              squad={squad}
+              starters={starters}
+              captainId={captainId}
+              selectedId={selectedId}
+              onPlayerClick={(player) =>
+                setSelectedId((prev) => (prev === player.id ? null : player.id))
+              }
+              onEmptyClick={openPoolFor}
+            />
+
+            {selected ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{selected.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {selected.position} · {selected.clubShort ?? selected.clubName} ·{" "}
+                    {formatRand(selected.price)}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={captainId === selected.id ? "primary" : "outline"}
+                  disabled={!selectedStarting}
+                  title={selectedStarting ? undefined : "Only starters can captain"}
+                  onClick={() => setCaptainId(selected.id)}
+                >
+                  <Star className="h-4 w-4" /> Captain
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!selectedStarting && starters.length >= SQUAD_RULES.starters}
+                  onClick={() => toggleStarter(selected.id)}
+                >
+                  {selectedStarting ? "Bench" : "Start"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => togglePlayer(selected)}>
+                  <Trash2 className="h-4 w-4" /> Remove
+                </Button>
               </div>
             ) : (
-              <SquadList
-                squad={squad}
-                starters={starters}
-                captainId={captainId}
-                onToggleStarter={toggleStarter}
-                onSetCaptain={setCaptainId}
-                onRemove={(id) => {
-                  const player = byId.get(id);
-                  if (player) togglePlayer(player);
-                }}
-              />
+              <p className="text-center text-xs text-muted-foreground">
+                Tap a slot to add a player, or tap a player to set captain, start/bench or remove.
+                Faded players are on the bench.
+              </p>
             )}
 
+            {!isDesktop ? (
+              <Button block variant="secondary" onClick={() => openPoolFor("ALL")}>
+                <Plus className="h-4 w-4" /> Browse player pool
+              </Button>
+            ) : null}
+
             {validation.errors.length > 0 || !captainId ? (
-              <ul className="space-y-1.5 rounded-2xl border border-border p-3 text-xs text-muted-foreground">
+              <ul className="space-y-1.5 rounded-lg border border-border p-3 text-xs text-muted-foreground">
                 {validation.errors.map((error) => (
                   <li key={error} className="flex gap-2">
                     <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
@@ -247,7 +309,12 @@ export function TeamBuilderScreen() {
               </p>
             )}
 
-            <Button block size="lg" disabled={!complete || save.isPending} onClick={() => save.mutate()}>
+            <Button
+              block
+              size="lg"
+              disabled={!complete || save.isPending}
+              onClick={() => save.mutate()}
+            >
               {save.isPending ? "Saving…" : existing ? "Update team" : "Save team"}
             </Button>
             {save.isError ? (
@@ -256,6 +323,27 @@ export function TeamBuilderScreen() {
             {save.isSuccess ? <p className="text-xs text-muted-foreground">Team saved.</p> : null}
           </CardBody>
         </Card>
+
+        {isDesktop ? (
+          <Card>
+            <CardBody className="space-y-4">
+              <h2 className="text-lg font-semibold">Player pool</h2>
+              {pool}
+            </CardBody>
+          </Card>
+        ) : (
+          <Sheet open={poolOpen} onOpenChange={setPoolOpen}>
+            <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Player pool</SheetTitle>
+                <SheetDescription>
+                  {formatRand(validation.remaining)} left · {squadIds.length}/{SQUAD_SIZE} picked
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-4">{pool}</div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </div>
   );
