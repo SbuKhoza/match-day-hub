@@ -77,6 +77,99 @@ export function swapBlockedReason(
   return "That swap would leave fewer than 3 defenders in your line-up.";
 }
 
+/**
+ * Repairs an XI that breaks the rules (e.g. a team saved with 2 goalkeepers): exactly one
+ * goalkeeper, ten outfield players and at least three defenders. Extra players go to the bench and
+ * are replaced by the best available substitutes. A valid XI is returned unchanged.
+ */
+export function normaliseLineup(squad: Player[], lineup: Lineup): Lineup {
+  const byId = new Map(squad.map((p) => [p.id, p]));
+  const isArmband = (p: Player) => p.id === lineup.captainId || p.id === lineup.viceCaptainId;
+  const seen = new Set<string>();
+  const current = lineup.starters
+    .map((id) => byId.get(id))
+    .filter((p): p is Player => {
+      if (!p || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+
+  // Exactly one goalkeeper.
+  const keepers = current.filter((p) => p.position === "GK");
+  const keeper = keepers[0] ?? squad.find((p) => p.position === "GK");
+  let outfield = current.filter((p) => p.position !== "GK");
+
+  const defCount = () => outfield.filter((p) => p.position === "DEF").length;
+  const wanted = keeper ? 10 : 11;
+
+  // Too many outfield players: bench from the end, protecting armbands and the 3-defender minimum.
+  while (outfield.length > wanted) {
+    let index = -1;
+    for (let i = outfield.length - 1; i >= 0; i -= 1) {
+      const p = outfield[i]!;
+      if (!isArmband(p) && (p.position !== "DEF" || defCount() > 3)) {
+        index = i;
+        break;
+      }
+    }
+    outfield.splice(index === -1 ? outfield.length - 1 : index, 1);
+  }
+
+  // Too few: bring on subs (defenders first while we have fewer than 3).
+  const pool = () =>
+    benchOf(
+      squad.filter((p) => p.position !== "GK"),
+      outfield.map((p) => p.id),
+    );
+  while (outfield.length < wanted) {
+    const candidates = pool();
+    const next =
+      (defCount() < 3 ? candidates.find((p) => p.position === "DEF") : undefined) ?? candidates[0];
+    if (!next) break;
+    outfield.push(next);
+  }
+
+  // At least three defenders: swap a non-defender out for a bench defender.
+  while (defCount() < 3) {
+    const inDef = pool().find((p) => p.position === "DEF");
+    let outIndex = -1;
+    for (let i = outfield.length - 1; i >= 0; i -= 1) {
+      const p = outfield[i]!;
+      if (p.position !== "DEF" && !isArmband(p)) {
+        outIndex = i;
+        break;
+      }
+    }
+    if (!inDef || outIndex === -1) break;
+    outfield = outfield.map((p, i) => (i === outIndex ? inDef : p));
+  }
+
+  const finalXI = [...(keeper ? [keeper] : []), ...outfield];
+  const ids = finalXI.map((p) => p.id);
+  const outfieldIds = outfield.map((p) => p.id);
+
+  let captainId = lineup.captainId && ids.includes(lineup.captainId) ? lineup.captainId : null;
+  let viceCaptainId =
+    lineup.viceCaptainId && ids.includes(lineup.viceCaptainId) && lineup.viceCaptainId !== captainId
+      ? lineup.viceCaptainId
+      : null;
+  captainId ??=
+    outfieldIds.find((id) => id !== viceCaptainId) ??
+    ids.find((id) => id !== viceCaptainId) ??
+    null;
+  viceCaptainId ??=
+    outfieldIds.find((id) => id !== captainId) ?? ids.find((id) => id !== captainId) ?? null;
+
+  return { starters: ids, captainId, viceCaptainId };
+}
+
+/** True when both lineups start the same eleven players (armbands ignored). */
+export function sameStarters(a: Lineup, b: Lineup): boolean {
+  return (
+    a.starters.length === b.starters.length && a.starters.every((id) => b.starters.includes(id))
+  );
+}
+
 /** Applies a substitution. The armband passes to the incoming player if the captain goes off. */
 export function substitute(lineup: Lineup, outId: string, inId: string): Lineup {
   return {

@@ -17,7 +17,9 @@ import {
   canSubstitute,
   isLineupLocked,
   lineupFromTeam,
+  normaliseLineup,
   sameLineup,
+  sameStarters,
   setCaptain,
   setViceCaptain,
   substitute,
@@ -44,15 +46,22 @@ export function LineupScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const saved = useMemo(() => (team ? lineupFromTeam(team) : null), [team]);
-  const lineup = draft ?? saved;
 
   const squad = useMemo(
     () => (team?.squad ?? []).map((id) => byId.get(id)).filter(Boolean) as Player[],
     [team, byId],
   );
 
+  // A saved XI that breaks the rules (e.g. 2 goalkeepers) is repaired here, and shows as unsaved.
+  const repaired = useMemo(
+    () => (saved && squad.length > 0 ? normaliseLineup(squad, saved) : saved),
+    [saved, squad],
+  );
+  const lineup = draft ?? repaired;
+  const wasRepaired = Boolean(saved && repaired && !sameStarters(saved, repaired));
+
   const locked = isLineupLocked(gameweek);
-  const dirty = Boolean(draft && saved && !sameLineup(draft, saved));
+  const dirty = Boolean(lineup && saved && !sameLineup(lineup, saved));
 
   const starters = lineup ? squad.filter((p) => lineup.starters.includes(p.id)) : [];
   const bench = lineup ? benchOf(squad, lineup.starters) : [];
@@ -77,16 +86,16 @@ export function LineupScreen() {
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!db || !uid || !team || !draft) throw new Error("You need to be signed in to save.");
+      if (!db || !uid || !team || !lineup) throw new Error("You need to be signed in to save.");
       await saveFantasyTeam(
         db,
         uid,
         {
           name: team.name,
           squad: team.squad, // never changed on this screen
-          starters: draft.starters,
-          captainId: draft.captainId,
-          viceCaptainId: draft.viceCaptainId,
+          starters: lineup.starters,
+          captainId: lineup.captainId,
+          viceCaptainId: lineup.viceCaptainId,
         },
         squad,
         gameweek?.number ?? team.gameweek,
@@ -188,6 +197,14 @@ export function LineupScreen() {
             <p className="flex items-center gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
               <Lock className="h-4 w-4 shrink-0" />
               The deadline has passed — your line-up is locked for this gameweek.
+            </p>
+          ) : null}
+
+          {wasRepaired && dirty ? (
+            <p className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+              <AlertCircle className="mt-px h-4 w-4 shrink-0" />
+              Your saved XI didn&apos;t follow the rules (1 goalkeeper, at least 3 defenders), so
+              we&apos;ve adjusted it. Save the line-up to keep the change.
             </p>
           ) : null}
 
