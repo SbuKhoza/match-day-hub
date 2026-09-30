@@ -15,10 +15,9 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 import { Carousel } from "@/components/common/Carousel";
-import { Card, CardBody } from "@/components/common/Card";
+import { Card } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { EmptyState } from "@/components/fantasy/EmptyState";
@@ -65,26 +64,6 @@ const LINKS = [
   },
   { to: "/fantasy/points", label: "Points", icon: Star, hint: "Gameweek and overall scoring" },
 ] as const;
-
-function DashedEmpty({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center rounded-lg border border-dashed border-border px-6 py-6 text-center">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-        <Icon className="h-4 w-4" aria-hidden />
-      </span>
-      <h3 className="mt-2.5 text-sm font-semibold">{title}</h3>
-      <p className="mt-1 max-w-xs text-xs text-muted-foreground">{description}</p>
-    </div>
-  );
-}
 
 export function FantasyScreen() {
   const { data: team, isLoading } = useFantasyTeam();
@@ -183,11 +162,11 @@ export function FantasyScreen() {
         />
 
         <FantasyNavCard
-          to="/fantasy/points"
-          icon={Star}
-          label="Total points"
-          title={String(overall)}
-          emphasis
+          to="/fantasy/transfers"
+          icon={ArrowLeftRight}
+          label="Transfers"
+          title={`${transfers?.filter((t) => t.gameweek === gw).length ?? 0} this GW`}
+          subtitle="Swap players in and out"
         />
 
         <FantasyNavCard
@@ -219,38 +198,6 @@ export function FantasyScreen() {
                 Go to leagues
               </Link>
             }
-          />
-        )}
-      </section>
-
-      <section>
-        <SectionHeader
-          title="Recent transfers"
-          to="/fantasy/transfers"
-          icon={ArrowLeftRight}
-          compact
-          large
-        />
-        {transfers && transfers.length > 0 ? (
-          <Card>
-            <CardBody className="p-4 sm:p-4">
-              <ul className="space-y-2 text-sm">
-                {transfers.slice(0, 5).map((transfer) => (
-                  <li
-                    key={transfer.id}
-                    className="rounded-lg border border-border px-3 py-2 text-xs"
-                  >
-                    GW {transfer.gameweek}: {transfer.outPlayerId} → {transfer.inPlayerId}
-                  </li>
-                ))}
-              </ul>
-            </CardBody>
-          </Card>
-        ) : (
-          <DashedEmpty
-            icon={ArrowLeftRight}
-            title="No transfers yet"
-            description="Transfers you make will appear here with the gameweek they were used in."
           />
         )}
       </section>

@@ -14,7 +14,7 @@ function clubHue(clubId: string): number {
   return hash;
 }
 
-function Shirt({ player }: { player: Player }) {
+export function Shirt({ player }: { player: Player }) {
   const hue = clubHue(player.clubId);
   const isKeeper = player.position === "GK";
   const fill = isKeeper ? `oklch(0.72 0.17 ${(hue + 120) % 360})` : `oklch(0.52 0.19 ${hue})`;
