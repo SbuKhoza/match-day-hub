@@ -173,20 +173,12 @@ export function PitchSurface({
         className,
       )}
       style={{
-        backgroundImage:
-          "repeating-linear-gradient(to bottom, oklch(0.6 0.16 145) 0 12.5%, oklch(0.55 0.15 145) 12.5% 25%)",
+        backgroundColor: "oklch(0.55 0.15 145)",
+        backgroundImage: "url(/pitch.svg)",
+        backgroundSize: "100% 100%",
+        backgroundRepeat: "no-repeat",
       }}
     >
-      {/* pitch markings */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-2 border-2 border-white/60 sm:inset-3" />
-        <div className="absolute left-1/2 top-2 h-3 w-[22%] -translate-x-1/2 border-2 border-t-0 border-white/60 bg-white/10 sm:top-3" />
-        <div className="absolute left-1/2 top-2 h-[17%] w-[62%] -translate-x-1/2 border-2 border-t-0 border-white/60 sm:top-3" />
-        <div className="absolute left-1/2 top-2 h-[7%] w-[32%] -translate-x-1/2 border-2 border-t-0 border-white/60 sm:top-3" />
-        <div className="absolute left-0 right-0 top-[76%] border-t-2 border-white/60" />
-        <div className="absolute bottom-2 left-1/2 aspect-square w-[28%] -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white/60 sm:bottom-3" />
-      </div>
-
       {children}
     </div>
   );
