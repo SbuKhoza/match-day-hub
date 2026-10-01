@@ -5,7 +5,6 @@ import { AuthCard, AuthError } from "@/components/auth/AuthCard";
 import { AuthField } from "@/components/auth/AuthField";
 import { authErrorMessage } from "@/components/auth/authErrors";
 import { Button } from "@/components/common/Button";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useMasterData";
 
@@ -42,15 +41,14 @@ export function AdminLoginScreen() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
       <div className="mb-6 flex w-full max-w-md items-center justify-between">
         <span className="flex items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-bold text-black">
             KO
           </span>
           <span className="text-lg font-semibold tracking-tight">Kickoff Admin</span>
         </span>
-        <ThemeToggle />
       </div>
 
       <AuthCard title="Admin sign in" subtitle="Restricted to Kickoff administrators.">

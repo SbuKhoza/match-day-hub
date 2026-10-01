@@ -9,13 +9,11 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { TeamBadge } from "@/components/common/TeamBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin, useTeams } from "@/hooks/useMasterData";
-import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { initials } from "@/utils/format";
 
 export function ProfileScreen() {
-  const { profile, user, logout, saveFavoriteTeam, savePreferredTheme } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { profile, user, logout, saveFavoriteTeam } = useAuth();
   const { data: teams, isLoading } = useTeams();
   const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
@@ -41,11 +39,6 @@ export function ProfileScreen() {
     }
   }
 
-  async function handleThemeChange(next: "light" | "dark") {
-    setTheme(next);
-    await savePreferredTheme(next).catch(() => undefined);
-  }
-
   async function handleLogout() {
     await logout();
     navigate({ to: "/auth", replace: true });
@@ -53,11 +46,11 @@ export function ProfileScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Profile" subtitle="Your account, club and appearance." />
+      <PageHeader title="Profile" subtitle="Your account and favourite club." />
 
       <Card>
         <CardBody className="flex flex-wrap items-center gap-4">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-lg font-semibold">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/25 text-lg font-semibold">
             {initials(name)}
           </span>
           <div className="min-w-0 flex-1">
@@ -72,27 +65,6 @@ export function ProfileScreen() {
               size="lg"
             />
           ) : null}
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody>
-          <h2 className="text-lg font-semibold">Appearance</h2>
-          <div className="mt-4 flex gap-3">
-            {(["light", "dark"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => handleThemeChange(option)}
-                className={cn(
-                  "flex-1 rounded-2xl border border-border px-4 py-4 text-sm font-medium capitalize transition-colors",
-                  theme === option ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
-                )}
-              >
-                {option} theme
-              </button>
-            ))}
-          </div>
         </CardBody>
       </Card>
 
@@ -117,8 +89,8 @@ export function ProfileScreen() {
                   onClick={() => handleTeamChange(team.teamId)}
                   disabled={saving !== null}
                   className={cn(
-                    "flex items-center gap-3 rounded-2xl border border-border p-4 text-left transition-colors hover:bg-secondary disabled:opacity-60",
-                    profile?.favoriteTeam === team.teamId && "ring-2 ring-foreground",
+                    "flex items-center gap-3 rounded-2xl bg-white/5 p-4 text-left transition-colors hover:bg-white/10 disabled:opacity-60",
+                    profile?.favoriteTeam === team.teamId && "bg-primary/20",
                   )}
                 >
                   <TeamBadge

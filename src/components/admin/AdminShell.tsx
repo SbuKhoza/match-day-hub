@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 
 export const ADMIN_NAV = [
@@ -37,9 +36,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
       key={item.to}
       to={item.to}
       activeOptions={{ exact: item.to === "/admin" }}
-      activeProps={{ className: "bg-secondary text-foreground" }}
+      activeProps={{ className: "bg-primary/20 text-foreground" }}
       inactiveProps={{ className: "text-muted-foreground" }}
-      className="flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground"
+      className="flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-white/10 hover:text-foreground"
     >
       <item.icon className="h-4 w-4" />
       {item.label}
@@ -47,10 +46,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   ));
 
   return (
-    <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 lg:flex">
+    <div className="relative min-h-screen">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col glass px-4 py-6 lg:flex">
         <div className="mb-8 flex items-center gap-3 px-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-bold text-black">
             KO
           </span>
           <span>
@@ -60,12 +59,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex flex-1 flex-col gap-1">{links}</nav>
         <div className="mt-6 space-y-3">
-          <ThemeToggle withLabel />
           <p className="truncate px-2 text-xs text-muted-foreground">{user?.email}</p>
           <button
             type="button"
             onClick={() => void logout()}
-            className="flex w-full items-center gap-2 rounded-2xl border border-border px-3 py-2.5 text-sm font-medium hover:bg-secondary"
+            className="flex w-full items-center gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-sm font-medium hover:bg-white/10"
           >
             <LogOut className="h-4 w-4" /> Sign out
           </button>
@@ -73,11 +71,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur lg:hidden">
+        <header className="glass sticky top-0 z-30 lg:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-base font-semibold tracking-tight">Kickoff Admin</span>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
               <button
                 type="button"
                 aria-label="Sign out"

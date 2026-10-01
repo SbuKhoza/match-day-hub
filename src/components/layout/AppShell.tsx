@@ -5,8 +5,9 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  // No background here: the PSL wallpaper is painted on <body> (see styles.css).
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <Sidebar />
       <div className="lg:pl-64">
         <TopBar />

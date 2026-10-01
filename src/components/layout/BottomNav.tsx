@@ -6,7 +6,7 @@ export function BottomNav() {
   const items = NAV_ITEMS.filter((item) => item.mobile);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 glass pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className="mx-auto flex max-w-xl items-stretch justify-between px-2">
         {items.map((item) => (
           <li key={item.to} className="flex-1">

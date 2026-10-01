@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import { NAV_ITEMS } from "./navItems";
-import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { initials } from "@/utils/format";
 
@@ -10,9 +9,9 @@ export function Sidebar() {
   const name = profile?.name ?? user?.displayName ?? "Guest";
 
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card px-4 py-6 lg:flex">
+    <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col glass px-4 py-6 lg:flex">
       <Link to="/" className="mb-8 flex items-center gap-3 px-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-xs font-bold tracking-tight text-primary-foreground">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-xs font-bold tracking-tight text-black">
           PSL
         </span>
         <span className="text-base font-semibold tracking-tight">Premier Soccer League</span>
@@ -24,9 +23,9 @@ export function Sidebar() {
             key={item.to}
             to={item.to as never}
             activeOptions={{ exact: item.to === "/" }}
-            activeProps={{ className: "bg-secondary text-foreground" }}
+            activeProps={{ className: "bg-primary/20 text-foreground" }}
             inactiveProps={{ className: "text-muted-foreground" }}
-            className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground"
+            className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors hover:bg-white/10 hover:text-foreground"
           >
             <item.icon className="h-5 w-5" />
             {item.label}
@@ -35,12 +34,11 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-6 space-y-3">
-        <ThemeToggle withLabel />
         <Link
           to="/profile"
-          className="flex items-center gap-3 rounded-2xl border border-border p-3 transition-colors hover:bg-secondary"
+          className="flex items-center gap-3 rounded-2xl bg-white/5 p-3 transition-colors hover:bg-white/10"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/25 text-xs font-semibold">
             {initials(name)}
           </span>
           <span className="min-w-0">
