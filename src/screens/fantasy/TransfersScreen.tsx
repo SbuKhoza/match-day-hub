@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
+import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
 import { EmptyState } from "@/components/fantasy/EmptyState";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
@@ -21,6 +22,7 @@ import {
 import {
   useFantasyDb,
   useFantasyTeam,
+  useEditableGameweek,
   useGameweek,
   usePlayers,
   useTransfers,
@@ -39,6 +41,7 @@ export function TransfersScreen() {
   const { data: players, byId, clubs } = usePlayers();
   const { data: transfers = [] } = useTransfers();
   const { data: gameweek } = useGameweek();
+  const { target, now } = useEditableGameweek();
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [outId, setOutId] = useState<string | null>(null);
@@ -89,11 +92,11 @@ export function TransfersScreen() {
           viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
         },
         nextPlayers,
-        gameweek?.number ?? 0,
+        target?.number ?? gameweek?.number ?? 0,
       );
       await recordTransfer(db, {
         uid,
-        gameweek: gameweek?.number ?? 0,
+        gameweek: target?.number ?? gameweek?.number ?? 0,
         outPlayerId: outId,
         inPlayerId: incoming.id,
       });
@@ -163,8 +166,9 @@ export function TransfersScreen() {
     <div className="space-y-6">
       <PageHeader
         title="Transfers"
-        subtitle={`Gameweek ${gameweek?.number ?? "—"} · like-for-like positions.`}
+        subtitle={`Gameweek ${target?.number ?? gameweek?.number ?? "—"} · like-for-like positions.`}
       />
+      <DeadlineBanner target={target} now={now} />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile label="Budget available" value={formatRand(budgetLeft)} />

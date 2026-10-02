@@ -19,6 +19,8 @@ import {
 import type {
   FantasyTeam,
   Gameweek,
+  GameweekChips,
+  GameweekLineup,
   League,
   Player,
   PlayerPoints,
@@ -27,6 +29,8 @@ import type {
 } from "@/types/fantasy";
 import { SQUAD_RULES, SQUAD_SIZE } from "@/types/fantasy";
 import { getFantasySettings } from "./adminService";
+import { assertChipsAllowed, NO_CHIPS } from "./chipService";
+import { listGameweeks, resolveEditTarget, seasonHalfFor } from "./gameweekService";
 
 export const COLLECTIONS = {
   fantasyTeams: "fantasyTeams",
@@ -90,29 +94,82 @@ export async function fetchFantasyTeam(db: Firestore, uid: string): Promise<Fant
   return { uid, ...(snapshot.data() as Omit<FantasyTeam, "uid">) };
 }
 
-/** Saves a squad. `players` are the resolved imported players for the squad ids. */
+export interface SaveTeamOptions {
+  /** Chips to switch on for the game week being edited. Omit to leave the saved chips as they are. */
+  chips?: GameweekChips;
+}
+
+/**
+ * Saves a squad. `players` are the resolved imported players for the squad ids.
+ *
+ * The game week the change applies to is decided here, from the stored deadlines, not by the
+ * caller: before the deadline it is the upcoming game week; after it, changes are stored for the
+ * next game week and the game week already in play keeps the team it started with.
+ */
 export async function saveFantasyTeam(
   db: Firestore,
   uid: string,
   input: Pick<FantasyTeam, "name" | "squad" | "starters" | "captainId" | "viceCaptainId">,
   players: Player[],
-  gameweek: number,
-): Promise<void> {
-  const { budget } = await getFantasySettings(db);
+  _gameweek?: number,
+  options: SaveTeamOptions = {},
+): Promise<{ appliedGameweek: number | null }> {
+  const [{ budget, secondHalfStart }, gameweeks, existing] = await Promise.all([
+    getFantasySettings(db),
+    listGameweeks(db),
+    fetchFantasyTeam(db, uid),
+  ]);
   const check = validateSquad(players, input.starters, budget);
   if (!check.valid) throw new Error(check.errors[0] ?? "Invalid squad");
 
+  const target = resolveEditTarget(gameweeks);
+  const base = {
+    uid,
+    ...input,
+    budgetSpent: check.spent,
+    updatedAt: serverTimestamp(),
+  };
+
+  // No game weeks scheduled yet: nothing to lock, keep the plain team document.
+  if (!target) {
+    await setDoc(doc(db, COLLECTIONS.fantasyTeams, uid), { ...base, gameweek: _gameweek ?? 0 }, { merge: true });
+    return { appliedGameweek: null };
+  }
+
+  const lineups: Record<string, GameweekLineup> = { ...(existing?.lineups ?? {}) };
+  const half = seasonHalfFor(target.gameweek, secondHalfStart);
+  const key = String(target.number);
+  const chips = options.chips ?? lineups[key]?.chips ?? NO_CHIPS;
+
+  // Keep the team the locked game week started with before anything is overwritten.
+  const inPlay = target.lockedGameweek;
+  if (existing && inPlay && !Object.keys(lineups).some((gw) => Number(gw) <= inPlay.number)) {
+    lineups[String(inPlay.number)] = {
+      squad: existing.squad,
+      starters: existing.starters,
+      captainId: existing.captainId,
+      viceCaptainId: existing.viceCaptainId,
+      chips: NO_CHIPS,
+      half: seasonHalfFor(inPlay, secondHalfStart),
+    };
+  }
+
+  assertChipsAllowed(lineups, chips, target.number, half);
+  lineups[key] = {
+    squad: input.squad,
+    starters: input.starters,
+    captainId: input.captainId,
+    viceCaptainId: input.viceCaptainId,
+    chips,
+    half,
+  };
+
   await setDoc(
     doc(db, COLLECTIONS.fantasyTeams, uid),
-    {
-      uid,
-      ...input,
-      budgetSpent: check.spent,
-      gameweek,
-      updatedAt: serverTimestamp(),
-    },
+    { ...base, gameweek: target.number, lineups },
     { merge: true },
   );
+  return { appliedGameweek: target.number };
 }
 
 /* -------------------------------- gameweeks ------------------------------- */

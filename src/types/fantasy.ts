@@ -13,6 +13,29 @@ export interface Player {
   form: number;
 }
 
+/** Which half of the season a game week belongs to (set by the admin's second-half start date). */
+export type SeasonHalf = 1 | 2;
+
+/** Chips a manager can switch on for a single game week. Each can be used once per half. */
+export interface GameweekChips {
+  doubleCaptain: boolean;
+  benchBoost: boolean;
+}
+
+/**
+ * The team a manager fielded for one game week. Stored on the fantasy team under `lineups`, keyed
+ * by game week number, so a change made after a deadline only affects the next game week.
+ */
+export interface GameweekLineup {
+  squad: string[];
+  starters: string[];
+  captainId: string | null;
+  viceCaptainId: string | null;
+  chips: GameweekChips;
+  /** Season half this game week falls in; chips are limited to one use per half. */
+  half: SeasonHalf;
+}
+
 export interface FantasyTeam {
   uid: string;
   name: string;
@@ -24,6 +47,8 @@ export interface FantasyTeam {
   gameweek: number;
   totalPoints: number;
   updatedAt: string;
+  /** Per-game-week line-ups, keyed by game week number. Missing on teams saved before chips. */
+  lineups?: Record<string, GameweekLineup>;
 }
 
 export interface League {
@@ -39,7 +64,10 @@ export interface Gameweek {
   id: string;
   number: number;
   status: "upcoming" | "live" | "finished";
+  /** Stored deadline. When `firstKickoff` is set the deadline is derived from it instead. */
   deadline: string;
+  /** Kick-off of the first match of the game week (ISO). The deadline is one hour before it. */
+  firstKickoff?: string | null;
 }
 
 export interface Transfer {

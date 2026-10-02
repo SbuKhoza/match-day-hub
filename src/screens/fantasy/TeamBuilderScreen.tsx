@@ -7,6 +7,7 @@ import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
+import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
@@ -18,7 +19,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers } from "@/hooks/useFantasy";
+import {
+  useEditableGameweek,
+  useFantasyDb,
+  useFantasyTeam,
+  useGameweek,
+  usePlayers,
+} from "@/hooks/useFantasy";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
@@ -33,6 +40,7 @@ export function TeamBuilderScreen() {
   const { data: players, byId, clubs, isLoading } = usePlayers();
   const { data: existing } = useFantasyTeam();
   const { data: gameweek } = useGameweek();
+  const { target, now } = useEditableGameweek();
   const { budget } = useFantasySettings();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
@@ -182,6 +190,7 @@ export function TeamBuilderScreen() {
   return (
     <div className="space-y-6">
       <PageHeader title="Team builder" subtitle="Budget R220.0m · 17 players · max 3 per club." />
+      <DeadlineBanner target={target} now={now} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Remaining budget" value={formatRand(validation.remaining)} />

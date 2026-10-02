@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers as useMasterPlayers, useTeams } from "@/hooks/useMasterData";
+import { useFantasySettings } from "@/hooks/useAdmin";
+import { listGameweeks, resolveEditTarget, seasonHalfFor } from "@/services/gameweekService";
 import { toFantasyPlayers } from "@/services/fantasyPool";
 import {
   fetchCurrentGameweek,
@@ -102,4 +104,39 @@ export function usePlayerPoints(gameweek?: number) {
     enabled: Boolean(db),
     refetchInterval: 120_000,
   });
+}
+
+/** Every scheduled gameweek, oldest first. */
+export function useGameweeks() {
+  const { db } = useFantasyDb();
+  return useQuery({
+    queryKey: ["fantasy", "gameweeks"],
+    queryFn: () => listGameweeks(db!),
+    enabled: Boolean(db),
+    staleTime: 60_000,
+  });
+}
+
+/** Re-renders every 15 seconds so deadline locks and countdowns update without a refresh. */
+function useNow(intervalMs = 15_000): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+/**
+ * The gameweek a manager can still change right now. Once the current deadline passes this moves
+ * on to the next gameweek (`rolledOver`), so edits never touch a gameweek already in play.
+ * `target` is null when no gameweeks have been scheduled yet.
+ */
+export function useEditableGameweek() {
+  const query = useGameweeks();
+  const { settings } = useFantasySettings();
+  const now = useNow();
+  const target = useMemo(() => resolveEditTarget(query.data ?? [], now), [query.data, now]);
+  const half = seasonHalfFor(target?.gameweek ?? null, settings.secondHalfStart, now);
+  return { target, half, now, isLoading: query.isLoading };
 }

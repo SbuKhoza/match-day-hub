@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { Field, inputClass } from "@/components/admin/AdminForm";
+import { GameweekScheduleCard } from "@/components/admin/GameweekScheduleCard";
+import { SeasonDatesCard } from "@/components/admin/SeasonDatesCard";
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -60,6 +62,8 @@ export function AdminSettingsScreen() {
           </p>
         </CardBody>
       </Card>
+      <SeasonDatesCard />
+      <GameweekScheduleCard />
     </div>
   );
 }

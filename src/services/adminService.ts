@@ -24,10 +24,26 @@ import { COLLECTIONS } from "./masterDataService";
 
 export interface FantasySettings {
   budget: number;
+  /** First day of the season, "YYYY-MM-DD". */
+  seasonStart: string | null;
+  /** Last day of the season, "YYYY-MM-DD". */
+  seasonEnd: string | null;
+  /** First day of the second half of the season, "YYYY-MM-DD". */
+  secondHalfStart: string | null;
   updatedAt: string | null;
 }
 
-export const DEFAULT_SETTINGS: FantasySettings = { budget: SQUAD_RULES.budget, updatedAt: null };
+export const DEFAULT_SETTINGS: FantasySettings = {
+  budget: SQUAD_RULES.budget,
+  seasonStart: null,
+  seasonEnd: null,
+  secondHalfStart: null,
+  updatedAt: null,
+};
+
+function asDateString(value: unknown): string | null {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
 
 export async function getFantasySettings(db: Firestore): Promise<FantasySettings> {
   const snapshot = await getDoc(doc(db, "settings", "fantasy"));
@@ -36,6 +52,9 @@ export async function getFantasySettings(db: Firestore): Promise<FantasySettings
   const budget = Number(data["budget"]);
   return {
     budget: Number.isFinite(budget) && budget > 0 ? budget : SQUAD_RULES.budget,
+    seasonStart: asDateString(data["seasonStart"]),
+    seasonEnd: asDateString(data["seasonEnd"]),
+    secondHalfStart: asDateString(data["secondHalfStart"]),
     updatedAt: (data["updatedAt"] as string) ?? null,
   };
 }
@@ -44,6 +63,33 @@ export async function saveFantasySettings(db: Firestore, budget: number): Promis
   await setDoc(
     doc(db, "settings", "fantasy"),
     { budget, updatedAt: new Date().toISOString() },
+    { merge: true },
+  );
+}
+
+export interface SeasonDates {
+  seasonStart: string;
+  seasonEnd: string;
+  secondHalfStart: string;
+}
+
+/** Returns an error message when the dates are not a valid season, otherwise null. */
+export function validateSeasonDates(dates: SeasonDates): string | null {
+  const { seasonStart, seasonEnd, secondHalfStart } = dates;
+  if (!seasonStart || !seasonEnd || !secondHalfStart) return "Fill in all three dates.";
+  if (seasonEnd <= seasonStart) return "The season must end after it starts.";
+  if (secondHalfStart <= seasonStart || secondHalfStart > seasonEnd) {
+    return "The second half must start after the season starts and on or before it ends.";
+  }
+  return null;
+}
+
+export async function saveSeasonDates(db: Firestore, dates: SeasonDates): Promise<void> {
+  const error = validateSeasonDates(dates);
+  if (error) throw new Error(error);
+  await setDoc(
+    doc(db, "settings", "fantasy"),
+    { ...dates, updatedAt: new Date().toISOString() },
     { merge: true },
   );
 }

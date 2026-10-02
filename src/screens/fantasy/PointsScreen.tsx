@@ -44,8 +44,8 @@ export function PointsScreen() {
       if (!player) continue;
       entries.push({
         player,
-        // Starters show their scored points (captain doubled); bench shows what they earned.
-        points: row.starting ? row.points : row.rawPoints,
+        // Counted points (captain multiplied, bench boosted); an unboosted bench shows what it earned.
+        points: row.starting || result.chips.benchBoost ? row.points : row.rawPoints,
         captain: row.captain,
         vice: team.viceCaptainId === row.playerId,
         stats: statsByPlayer.get(row.playerId),
@@ -118,8 +118,18 @@ export function PointsScreen() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={`GW ${selectedGw}`} value={String(result?.total ?? 0)} icon={Star} />
         <StatTile label="Overall" value={String(overall)} />
-        <StatTile label="Captain bonus" value={String(result?.captainBonus ?? 0)} />
-        <StatTile label="Bench" value={String(result?.benchPoints ?? 0)} />
+        <StatTile
+          label="Captain bonus"
+          value={String(result?.captainBonus ?? 0)}
+          {...(result?.chips.doubleCaptain ? { hint: "Double Captain active" } : {})}
+        />
+        <StatTile
+          label="Bench"
+          value={String(result?.benchPoints ?? 0)}
+          {...(result?.chips.benchBoost
+            ? { hint: `Boosted: +${result.benchBoostBonus} counted` }
+            : {})}
+        />
       </div>
 
       {/* Pitch view of the selected gameweek */}
@@ -139,7 +149,7 @@ export function PointsScreen() {
         )}
         <p className="mt-2 text-[11px] text-muted-foreground">
           G goals · A assists · CS clean sheet · YC/RC cards · DNP did not play. Captain (C) points
-          are doubled.
+          are doubled. Chips: Double Captain doubles them again; Bench Boost counts the bench, +2 for anyone on 1+.
         </p>
       </section>
 

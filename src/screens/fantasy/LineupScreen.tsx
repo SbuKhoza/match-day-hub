@@ -1,21 +1,24 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Lock, Shield, Star, Users, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Shield, Star, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { LoadingState } from "@/components/common/DataState";
 import { PageHeader } from "@/components/common/PageHeader";
+import { ChipsPanel } from "@/components/fantasy/ChipsPanel";
+import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
 import { EmptyState } from "@/components/fantasy/EmptyState";
 import { LineupPitch } from "@/components/fantasy/LineupPitch";
 import { StatTile } from "@/components/fantasy/StatTile";
-import { useFantasyDb, useFantasyTeam, useGameweek, usePlayers } from "@/hooks/useFantasy";
+import { useEditableGameweek, useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
+import { NO_CHIPS, sameChips, type ChipKey } from "@/services/chipService";
 import { saveFantasyTeam } from "@/services/fantasyService";
+import { formatKickoff } from "@/utils/format";
 import {
   benchOf,
   canSubstitute,
-  isLineupLocked,
   lineupFromTeam,
   normaliseLineup,
   sameLineup,
@@ -26,24 +29,27 @@ import {
   swapBlockedReason,
   type Lineup,
 } from "@/services/lineupService";
-import { SQUAD_RULES, SQUAD_SIZE, type Player } from "@/types/fantasy";
-import { formatKickoff } from "@/utils/format";
+import { SQUAD_RULES, SQUAD_SIZE, type GameweekChips, type Player } from "@/types/fantasy";
 
 /**
  * Gameweek line-up. The user sees only their saved squad: the XI on the pitch and the subs on the
  * bench. The only edit available is swapping a starter with a substitute (plus the armband) —
  * bringing in players from outside the squad is done on the Transfers screen.
+ *
+ * Changes always apply to the next gameweek that has not hit its deadline. The Double Captain and
+ * Bench Boost chips live here, and only here.
  */
 export function LineupScreen() {
   const { db, uid } = useFantasyDb();
   const queryClient = useQueryClient();
   const { data: team, isLoading: teamLoading } = useFantasyTeam();
   const { byId, isLoading: playersLoading } = usePlayers();
-  const { data: gameweek } = useGameweek();
+  const { target, half, now } = useEditableGameweek();
 
   const [draft, setDraft] = useState<Lineup | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [draftChips, setDraftChips] = useState<GameweekChips | null>(null);
 
   const saved = useMemo(() => (team ? lineupFromTeam(team) : null), [team]);
 
@@ -60,8 +66,12 @@ export function LineupScreen() {
   const lineup = draft ?? repaired;
   const wasRepaired = Boolean(saved && repaired && !sameStarters(saved, repaired));
 
-  const locked = isLineupLocked(gameweek);
-  const dirty = Boolean(lineup && saved && !sameLineup(lineup, saved));
+  // Edits always go to the open gameweek: once a deadline passes the target moves to the next one.
+  const editingGw = target?.number ?? team?.gameweek ?? 0;
+  const savedChips = team?.lineups?.[String(editingGw)]?.chips ?? NO_CHIPS;
+  const chips = draftChips ?? savedChips;
+  const lineupDirty = Boolean(lineup && saved && !sameLineup(lineup, saved));
+  const dirty = lineupDirty || !sameChips(chips, savedChips);
 
   const starters = lineup ? squad.filter((p) => lineup.starters.includes(p.id)) : [];
   const bench = lineup ? benchOf(squad, lineup.starters) : [];
@@ -98,16 +108,22 @@ export function LineupScreen() {
           viceCaptainId: lineup.viceCaptainId,
         },
         squad,
-        gameweek?.number ?? team.gameweek,
+        editingGw,
+        { chips },
       );
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["fantasy", "team", uid] });
       setDraft(null);
+      setDraftChips(null);
       setSelectedId(null);
       setNotice(null);
     },
   });
+
+  function toggleChip(chip: ChipKey) {
+    setDraftChips({ ...chips, [chip]: !chips[chip] });
+  }
 
   if (teamLoading || playersLoading) return <LoadingState label="Loading your line-up…" />;
 
@@ -143,7 +159,7 @@ export function LineupScreen() {
     .join("-");
 
   function handlePlayerClick(player: Player) {
-    if (locked || !lineup) return;
+    if (!lineup) return;
     setNotice(null);
 
     if (!selectedId || selectedId === player.id) {
@@ -168,21 +184,21 @@ export function LineupScreen() {
     }
   }
 
-  const captainAllowed = selected && selectedIsStarter && !locked;
+  const captainAllowed = selected && selectedIsStarter;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="My line-up"
-        subtitle={`Gameweek ${gameweek?.number ?? "—"} · swap your starters with your substitutes.`}
+        subtitle={`Gameweek ${target?.number ?? "—"} · swap your starters with your substitutes.`}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile label="Formation" value={formation} hint="DEF-MID-FWD" />
         <StatTile
           label="Deadline"
-          value={gameweek ? formatKickoff(gameweek.deadline) : "—"}
-          {...(locked ? { icon: Lock } : {})}
+          value={target?.deadline ? formatKickoff(new Date(target.deadline).toISOString()) : "—"}
+          icon={Clock}
         />
         <StatTile
           label="Captain"
@@ -193,12 +209,7 @@ export function LineupScreen() {
 
       <Card>
         <CardBody className="space-y-4">
-          {locked ? (
-            <p className="flex items-center gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
-              <Lock className="h-4 w-4 shrink-0" />
-              The deadline has passed — your line-up is locked for this gameweek.
-            </p>
-          ) : null}
+          <DeadlineBanner target={target} now={now} />
 
           {wasRepaired && dirty ? (
             <p className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
@@ -215,7 +226,7 @@ export function LineupScreen() {
             viceCaptainId={lineup.viceCaptainId}
             selectedId={selectedId}
             targetIds={targetIds}
-            onPlayerClick={locked ? undefined : handlePlayerClick}
+            onPlayerClick={handlePlayerClick}
           />
 
           <div aria-live="polite">
@@ -255,9 +266,7 @@ export function LineupScreen() {
               </div>
             ) : (
               <p className="text-center text-xs text-muted-foreground">
-                {locked
-                  ? "Line-up locked."
-                  : "Tap a starter or a substitute, then tap the player to swap with."}
+                Tap a starter or a substitute, then tap the player to swap with.
               </p>
             )}
             {notice ? (
@@ -273,6 +282,7 @@ export function LineupScreen() {
               disabled={!dirty || save.isPending}
               onClick={() => {
                 setDraft(null);
+                setDraftChips(null);
                 setSelectedId(null);
                 setNotice(null);
               }}
@@ -282,7 +292,7 @@ export function LineupScreen() {
             <Button
               block
               size="lg"
-              disabled={!dirty || locked || save.isPending}
+              disabled={!dirty || save.isPending}
               onClick={() => save.mutate()}
             >
               {save.isPending ? "Saving…" : "Save line-up"}
@@ -298,6 +308,15 @@ export function LineupScreen() {
           ) : null}
         </CardBody>
       </Card>
+
+      <ChipsPanel
+        lineups={team.lineups}
+        chips={chips}
+        gameweek={editingGw}
+        half={half}
+        onToggle={toggleChip}
+        disabled={save.isPending}
+      />
 
       <p className="text-center text-xs text-muted-foreground">
         Want different players in your squad?{" "}
