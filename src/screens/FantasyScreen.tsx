@@ -3,11 +3,9 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
+  ArrowRight,
   CalendarClock,
-  Crown,
-  Footprints,
-  Hand,
-  Minus,
+  ChevronRight,
   Newspaper,
   PlayCircle,
   Star,
@@ -17,15 +15,16 @@ import {
 } from "lucide-react";
 
 import { Carousel } from "@/components/common/Carousel";
-import { Card } from "@/components/common/Card";
-import { EmptyMessage, LoadingState } from "@/components/common/DataState";
-import { SectionHeader } from "@/components/common/SectionHeader";
-import { EmptyState } from "@/components/fantasy/EmptyState";
-import { FantasyNavCard } from "@/components/fantasy/FantasyNavCard";
+import { LoadingState } from "@/components/common/DataState";
+import { CompactEmpty } from "@/components/fantasy/CompactEmpty";
+import { FantasyOnboarding } from "@/components/fantasy/FantasyOnboarding";
+import { FantasySectionHead } from "@/components/fantasy/FantasySectionHead";
+import { GameweekHero } from "@/components/fantasy/GameweekHero";
+import { LeagueLeadersCard } from "@/components/fantasy/LeagueLeadersCard";
 import { LeagueSummaryRow } from "@/components/fantasy/LeagueSummaryRow";
 import { MediaRowCard } from "@/components/fantasy/MediaRowCard";
-import { StatLeaderRow } from "@/components/fantasy/StatLeaderRow";
 import { StatTile } from "@/components/fantasy/StatTile";
+import { useAuth } from "@/hooks/useAuth";
 import {
   useFantasyTeam,
   useGameweek,
@@ -38,18 +37,7 @@ import { contentService } from "@/services/contentService";
 import { calculateGameweek, calculateOverall } from "@/services/scoringService";
 import { formatKickoff, formatRand, relativeDay } from "@/utils/format";
 
-/**
- * Banner decoration (right side): diagonal stripes + a faded trophy.
- * Lower opacity = more subtle. Use "opacity-0" to hide either without removing code.
- */
-const BANNER_STRIPES_OPACITY = "opacity-[0.07]";
-const BANNER_WATERMARK_OPACITY = "opacity-[0.06]";
-const BANNER_WATERMARK_SIZE = "h-40 w-40 sm:h-52 sm:w-52";
-const BANNER_WATERMARK_POSITION = "-right-4 top-1";
-
-const STRIPE_MASK = "linear-gradient(to right, transparent, black 65%)";
-
-/** Width of each carousel slide — under 100% so the next card peeks in, as in the design. */
+/** Width of each carousel slide — under 100% so the next card peeks in. */
 const CAROUSEL_SLIDE = "w-[84%] sm:w-[28rem]";
 
 const LINKS = [
@@ -66,6 +54,7 @@ const LINKS = [
 ] as const;
 
 export function FantasyScreen() {
+  const { profile, user } = useAuth();
   const { data: team, isLoading } = useFantasyTeam();
   const { data: leagues } = useLeagues();
   const { data: gameweek } = useGameweek();
@@ -90,110 +79,107 @@ export function FantasyScreen() {
   const { budget } = useFantasySettings();
   const remaining = budget - (team?.budgetSpent ?? 0);
 
+  const transfersThisGw = transfers?.filter((t) => t.gameweek === gw).length ?? 0;
+
   return (
-    <div className="space-y-6">
-      {/* Banner */}
-      <Card className="relative">
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute inset-y-0 right-0 w-3/5 text-foreground ${BANNER_STRIPES_OPACITY}`}
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(115deg, transparent 0 18px, currentColor 18px 23px)",
-            maskImage: STRIPE_MASK,
-            WebkitMaskImage: STRIPE_MASK,
-          }}
+    <div className="-mt-3 space-y-5 sm:-mt-4">
+      {/* 1. Gameweek dashboard when a team exists, onboarding otherwise */}
+      {isLoading ? (
+        <div className="h-64 animate-pulse rounded-3xl bg-muted" />
+      ) : team ? (
+        <GameweekHero
+          teamName={team.name}
+          managerName={profile?.name ?? user?.displayName ?? undefined}
+          gameweek={gameweek}
+          gameweekPoints={gwResult?.total ?? 0}
+          overallPoints={overall}
+          budgetLeft={formatRand(remaining)}
         />
-        <Trophy
-          aria-hidden
-          className={`pointer-events-none absolute ${BANNER_WATERMARK_POSITION} ${BANNER_WATERMARK_SIZE} ${BANNER_WATERMARK_OPACITY}`}
-        />
-        <div className="relative flex items-center gap-3 p-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary">
-            <Trophy className="h-6 w-6" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold">Fantasy</h1>
-            <p className="text-[13px] text-muted-foreground">Build your squad. Compete. Win.</p>
-          </div>
-        </div>
-      </Card>
+      ) : (
+        <FantasyOnboarding />
+      )}
 
-      {/* Hub cards (2 × 2, also on mobile) */}
+      {/* 2. My team */}
+      {team ? (
+        <section>
+          <FantasySectionHead title="My team" icon={Users} to="/fantasy/lineup" linkLabel="View" />
+          <Link to="/fantasy/lineup" className="home-card block transition-colors hover:bg-white/[0.07]">
+            <div className="flex items-center gap-3 p-3.5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                <Users className="h-5 w-5 text-primary" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold">{team.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {team.squad.length} players · {team.starters.length} starting ·{" "}
+                  {formatRand(team.budgetSpent)} spent
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
+          </Link>
+        </section>
+      ) : null}
+
+      {/* 3. Transfers + gameweek / deadline */}
       <div className="grid grid-cols-2 gap-3">
-        {isLoading ? (
-          <div className="h-[76px] animate-pulse rounded-lg bg-muted" />
-        ) : team ? (
-          <FantasyNavCard
-            to="/fantasy/lineup"
-            icon={Users}
-            label="My team"
-            title={team.name}
-            subtitle={`${team.squad.length} players · ${team.starters.length} starting · ${formatRand(team.budgetSpent)} spent`}
-          />
-        ) : (
-          <FantasyNavCard
-            to="/fantasy/team"
-            icon={Users}
-            label="My team"
-            title="Build my team"
-            subtitle="No squad yet — pick 17 players inside your budget."
-          />
-        )}
+        <Link
+          to="/fantasy/transfers"
+          className="home-card flex flex-col p-3.5 transition-colors hover:bg-white/[0.07]"
+        >
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Transfers
+          </p>
+          <p className="mt-1 text-3xl font-bold leading-none tabular-nums">{transfersThisGw}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">made this GW</p>
+          <p className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-medium text-primary">
+            Manage transfers <ArrowRight className="h-3 w-3" aria-hidden />
+          </p>
+        </Link>
 
-        <FantasyNavCard
+        <Link
           to="/fantasy/points"
-          icon={CalendarClock}
-          label={`Gameweek ${gw}`}
-          subtitle={
-            gameweek ? `Deadline ${formatKickoff(gameweek.deadline)}` : "Fixtures not yet available"
-          }
-          trailing={
-            gameweek ? (
-              <span className="shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] font-medium capitalize">
+          className="home-card flex flex-col p-3.5 transition-colors hover:bg-white/[0.07]"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Gameweek
+            </p>
+            {gameweek ? (
+              <span className="rounded-md bg-white/[0.07] px-1.5 py-0.5 text-[10px] font-medium capitalize">
                 {gameweek.status}
               </span>
-            ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
-                <Minus className="h-4 w-4" aria-hidden />
-              </span>
-            )
-          }
-        />
-
-        <FantasyNavCard
-          to="/fantasy/transfers"
-          icon={ArrowLeftRight}
-          label="Transfers"
-          title={`${transfers?.filter((t) => t.gameweek === gw).length ?? 0} this GW`}
-          subtitle="Swap players in and out"
-        />
-
-        <FantasyNavCard
-          to="/fantasy/leagues"
-          icon={Trophy}
-          label="Latest league standings"
-          subtitle="See how you and your friends are performing"
-        />
+            ) : null}
+          </div>
+          <p className="mt-1 text-3xl font-bold leading-none tabular-nums">{gameweek ? gw : "—"}</p>
+          <p className="mt-1 flex items-start gap-1 text-[11px] leading-snug text-muted-foreground">
+            <CalendarClock className="mt-px h-3 w-3 shrink-0" aria-hidden />
+            {gameweek ? formatKickoff(gameweek.deadline) : "Fixtures not yet available"}
+          </p>
+          <p className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-medium text-primary">
+            View points <ArrowRight className="h-3 w-3" aria-hidden />
+          </p>
+        </Link>
       </div>
 
+      {/* 4. Mini-leagues */}
       <section>
-        <SectionHeader title="Your mini-leagues" to="/fantasy/leagues" icon={Users} compact large />
+        <FantasySectionHead title="Your mini-leagues" icon={Users} to="/fantasy/leagues" />
         {leagues && leagues.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {leagues.slice(0, 3).map((league) => (
               <LeagueSummaryRow key={league.id} league={league} />
             ))}
           </div>
         ) : (
-          <EmptyState
+          <CompactEmpty
             icon={Users}
             title="No mini-leagues yet"
             description="Create or join a mini-league to compare with friends."
             action={
               <Link
                 to="/fantasy/leagues"
-                className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
               >
                 Go to leagues
               </Link>
@@ -202,13 +188,21 @@ export function FantasyScreen() {
         )}
       </section>
 
+      {/* 5. League leaders */}
       <section>
-        <SectionHeader title="Fantasy news" to="/news" icon={Newspaper} compact large />
+        <FantasySectionHead title="League leaders" icon={Trophy} to="/stats" />
+        <LeagueLeadersCard topScorer={topScorer} topAssist={topAssist} />
+      </section>
+
+      {/* 6. Fantasy news */}
+      <section>
+        <FantasySectionHead title="Fantasy news" icon={Newspaper} to="/news" />
         {fantasyNews.isLoading ? (
           <LoadingState label="Loading fantasy news…" />
         ) : !fantasyNews.data || fantasyNews.data.length === 0 ? (
-          <EmptyMessage
-            title="No fantasy news yet."
+          <CompactEmpty
+            icon={Newspaper}
+            title="No fantasy news available yet"
             description="Fantasy tips and updates appear here once published."
           />
         ) : (
@@ -228,12 +222,13 @@ export function FantasyScreen() {
         )}
       </section>
 
+      {/* 7. Videos */}
       <section>
-        <SectionHeader title="Videos" to="/videos" icon={PlayCircle} compact large />
+        <FantasySectionHead title="Videos" icon={PlayCircle} to="/videos" />
         {videos.isLoading ? (
           <LoadingState label="Loading videos…" />
         ) : !videos.data || videos.data.length === 0 ? (
-          <EmptyMessage title="No videos available yet." />
+          <CompactEmpty icon={PlayCircle} title="No videos available yet" />
         ) : (
           <Carousel itemClassName={CAROUSEL_SLIDE}>
             {videos.data.map((video) => (
@@ -251,34 +246,8 @@ export function FantasyScreen() {
         )}
       </section>
 
-      <section className="space-y-3">
-        <StatLeaderRow
-          icon={Crown}
-          label="Top Scorer"
-          row={topScorer}
-          value={topScorer?.goals}
-          valueLabel="Goals"
-          unavailableText="No statistics available"
-        />
-        <StatLeaderRow
-          icon={Footprints}
-          label="Top Assists"
-          row={topAssist}
-          value={topAssist?.assists}
-          valueLabel="Assists"
-          unavailableText="No statistics available"
-        />
-        <StatLeaderRow
-          icon={Hand}
-          label="Clean Sheets"
-          row={null}
-          valueLabel="Clean Sheets"
-          unavailableText="Not published by the data provider yet"
-        />
-      </section>
-
-      {/* Existing stat tiles + quick links, kept but tucked away so the screen matches the design. */}
-      <details className="group rounded-lg border border-border p-3">
+      {/* Existing stat tiles + quick links, kept but tucked away. */}
+      <details className="group home-card p-3">
         <summary className="cursor-pointer list-none text-xs font-medium text-muted-foreground group-open:mb-4 group-open:text-foreground">
           More fantasy details
         </summary>
@@ -299,9 +268,9 @@ export function FantasyScreen() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-secondary"
+                className="flex items-center gap-3 rounded-xl border border-white/10 p-3 transition-colors hover:bg-white/5"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06]">
                   <link.icon className="h-4 w-4" />
                 </span>
                 <span className="min-w-0">

@@ -1,6 +1,5 @@
 import { Clock, Play } from "lucide-react";
 
-import { Card } from "@/components/common/Card";
 
 /**
  * Horizontal media card (image left ~40%, text right) for the Fantasy news and
@@ -24,7 +23,7 @@ export function MediaRowCard({
   playable?: boolean;
 }) {
   return (
-    <Card className="group flex h-36 transition-shadow hover:shadow-lifted sm:h-40">
+    <div className="home-card group flex h-32 overflow-hidden transition-colors hover:bg-white/[0.07] sm:h-36">
       <div className="relative w-[38%] shrink-0 overflow-hidden">
         <img
           src={image}
@@ -41,7 +40,7 @@ export function MediaRowCard({
         ) : null}
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 p-3">
-        <span className="w-fit rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+        <span className="w-fit rounded-md bg-primary/15 px-1.5 text-primary py-0.5 text-[10px] font-semibold uppercase tracking-wide">
           {badge}
         </span>
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug">{title}</h3>
@@ -55,6 +54,6 @@ export function MediaRowCard({
           </p>
         ) : null}
       </div>
-    </Card>
+    </div>
   );
 }
