@@ -1,6 +1,5 @@
 import { Check, Star, Users } from "lucide-react";
 
-import { Card, CardBody } from "@/components/common/Card";
 import { cn } from "@/lib/utils";
 import {
   BENCH_BOOST_BONUS,
@@ -32,10 +31,9 @@ export interface ChipsPanelProps {
 /** Double Captain and Bench Boost. Each can be used once in each half of the season. */
 export function ChipsPanel({ lineups, chips, gameweek, half, onToggle, disabled }: ChipsPanelProps) {
   return (
-    <Card>
-      <CardBody className="space-y-3">
+    <section className="home-card space-y-3 p-3.5">
         <div>
-          <h2 className="text-lg font-semibold">Chips</h2>
+          <h2 className="text-[15px] font-bold uppercase tracking-wide">Chips</h2>
           <p className="text-xs text-muted-foreground">
             Gameweek {gameweek} · {half === 1 ? "first" : "second"} half. Each chip can be used once
             per half, twice a season.
@@ -52,8 +50,8 @@ export function ChipsPanel({ lineups, chips, gameweek, half, onToggle, disabled 
               <div
                 key={chip}
                 className={cn(
-                  "flex flex-col gap-2 rounded-lg border p-3",
-                  status.active ? "border-primary bg-primary/10" : "border-border",
+                  "flex flex-col gap-2 rounded-xl border p-3",
+                  status.active ? "border-primary/60 bg-primary/10" : "border-white/10 bg-white/[0.03]",
                 )}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -72,7 +70,7 @@ export function ChipsPanel({ lineups, chips, gameweek, half, onToggle, disabled 
                   aria-pressed={status.active}
                   onClick={() => onToggle(chip)}
                   className={cn(
-                    "mt-auto inline-flex h-9 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-all disabled:opacity-50",
+                    "mt-auto inline-flex h-9 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition-all disabled:opacity-50",
                     status.active
                       ? "bg-primary text-primary-foreground"
                       : "bg-white/10 hover:bg-white/15",
@@ -93,7 +91,6 @@ export function ChipsPanel({ lineups, chips, gameweek, half, onToggle, disabled 
             );
           })}
         </div>
-      </CardBody>
-    </Card>
+    </section>
   );
 }

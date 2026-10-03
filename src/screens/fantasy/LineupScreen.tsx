@@ -1,17 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Clock, Shield, Star, Users, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Shield, Star, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
-import { Card, CardBody } from "@/components/common/Card";
 import { LoadingState } from "@/components/common/DataState";
-import { PageHeader } from "@/components/common/PageHeader";
 import { ChipsPanel } from "@/components/fantasy/ChipsPanel";
 import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
-import { EmptyState } from "@/components/fantasy/EmptyState";
+import { CompactEmpty } from "@/components/fantasy/CompactEmpty";
+import { FantasySubHeader } from "@/components/fantasy/FantasySubHeader";
 import { LineupPitch } from "@/components/fantasy/LineupPitch";
-import { StatTile } from "@/components/fantasy/StatTile";
+import { StatStrip } from "@/components/fantasy/StatStrip";
 import { useEditableGameweek, useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
 import { NO_CHIPS, sameChips, type ChipKey } from "@/services/chipService";
 import { saveFantasyTeam } from "@/services/fantasyService";
@@ -135,18 +134,18 @@ export function LineupScreen() {
 
   if (!team || !ready || !lineup) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="My line-up" subtitle="Pick who plays in the next gameweek." />
-        <EmptyState
+      <div className="-mt-3 space-y-5 sm:-mt-4">
+        <FantasySubHeader title="My line-up" subtitle="Pick who plays in the next gameweek." />
+        <CompactEmpty
           icon={Users}
           title={team ? "Finish your squad first" : "Build a team first"}
           description="Your line-up unlocks once you've saved a full 17-player squad with a starting XI."
           action={
             <Link
               to="/fantasy/team"
-              className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
             >
-              Go to team builder
+              Team builder
             </Link>
           }
         />
@@ -187,127 +186,131 @@ export function LineupScreen() {
   const captainAllowed = selected && selectedIsStarter;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
+    <div className="-mt-3 space-y-5 sm:-mt-4">
+      <FantasySubHeader
         title="My line-up"
-        subtitle={`Gameweek ${target?.number ?? "—"} · swap your starters with your substitutes.`}
+        subtitle={`Gameweek ${target?.number ?? "—"} · swap your starters with your substitutes`}
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatTile label="Formation" value={formation} hint="DEF-MID-FWD" />
-        <StatTile
-          label="Deadline"
-          value={target?.deadline ? formatKickoff(new Date(target.deadline).toISOString()) : "—"}
-          icon={Clock}
-        />
-        <StatTile
-          label="Captain"
-          value={byId.get(lineup.captainId ?? "")?.name ?? "—"}
-          icon={Star}
-        />
-      </div>
+      <StatStrip
+        items={[
+          { label: "Formation", value: formation, hint: "DEF-MID-FWD" },
+          {
+            label: "Deadline",
+            value: target?.deadline ? formatKickoff(new Date(target.deadline).toISOString()) : "—",
+          },
+          { label: "Captain", value: byId.get(lineup.captainId ?? "")?.name ?? "—" },
+        ]}
+      />
 
-      <Card>
-        <CardBody className="space-y-4">
-          <DeadlineBanner target={target} now={now} />
+      <DeadlineBanner target={target} now={now} />
 
-          {wasRepaired && dirty ? (
-            <p className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
-              <AlertCircle className="mt-px h-4 w-4 shrink-0" />
-              Your saved XI didn&apos;t follow the rules (1 goalkeeper, at least 3 defenders), so
-              we&apos;ve adjusted it. Save the line-up to keep the change.
-            </p>
+      {wasRepaired && dirty ? (
+        <p className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs text-muted-foreground">
+          <AlertCircle className="mt-px h-4 w-4 shrink-0" />
+          Your saved XI didn&apos;t follow the rules (1 goalkeeper, at least 3 defenders), so
+          we&apos;ve adjusted it. Save the line-up to keep the change.
+        </p>
+      ) : null}
+
+      <section className="home-card space-y-3 p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[15px] font-bold uppercase tracking-wide">Starting XI</h2>
+          {dirty ? (
+            <span className="rounded-md bg-gold/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold">
+              Unsaved changes
+            </span>
           ) : null}
+        </div>
 
-          <LineupPitch
-            starters={starters}
-            bench={bench}
-            captainId={lineup.captainId}
-            viceCaptainId={lineup.viceCaptainId}
-            selectedId={selectedId}
-            targetIds={targetIds}
-            onPlayerClick={handlePlayerClick}
-          />
+        <LineupPitch
+          starters={starters}
+          bench={bench}
+          captainId={lineup.captainId}
+          viceCaptainId={lineup.viceCaptainId}
+          selectedId={selectedId}
+          targetIds={targetIds}
+          onPlayerClick={handlePlayerClick}
+        />
 
-          <div aria-live="polite">
-            {selected ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{selected.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {targetIds.size > 0
-                      ? selectedIsStarter
-                        ? "Tap a highlighted substitute to bring them on."
-                        : "Tap a highlighted starter to replace them."
-                      : "No valid swaps for this player."}
-                  </p>
-                </div>
-                {captainAllowed ? (
-                  <>
-                    <Button
-                      size="sm"
-                      variant={lineup.captainId === selected.id ? "primary" : "outline"}
-                      onClick={() => setDraft(setCaptain(lineup, selected.id))}
-                    >
-                      <Star className="h-4 w-4" /> Captain
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={lineup.viceCaptainId === selected.id ? "primary" : "outline"}
-                      onClick={() => setDraft(setViceCaptain(lineup, selected.id))}
-                    >
-                      <Shield className="h-4 w-4" /> Vice
-                    </Button>
-                  </>
-                ) : null}
-                <Button size="sm" variant="ghost" onClick={() => setSelectedId(null)}>
-                  <X className="h-4 w-4" /> Cancel
-                </Button>
+        <div aria-live="polite">
+          {selected ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 p-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{selected.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {targetIds.size > 0
+                    ? selectedIsStarter
+                      ? "Tap a highlighted substitute to bring them on."
+                      : "Tap a highlighted starter to replace them."
+                    : "No valid swaps for this player."}
+                </p>
               </div>
-            ) : (
-              <p className="text-center text-xs text-muted-foreground">
-                Tap a starter or a substitute, then tap the player to swap with.
-              </p>
-            )}
-            {notice ? (
-              <p className="mt-2 flex items-center gap-2 text-xs text-destructive">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {notice}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={!dirty || save.isPending}
-              onClick={() => {
-                setDraft(null);
-                setDraftChips(null);
-                setSelectedId(null);
-                setNotice(null);
-              }}
-            >
-              Reset
-            </Button>
-            <Button
-              block
-              size="lg"
-              disabled={!dirty || save.isPending}
-              onClick={() => save.mutate()}
-            >
-              {save.isPending ? "Saving…" : "Save line-up"}
-            </Button>
-          </div>
-          {save.isError ? (
-            <p className="text-xs text-destructive">{(save.error as Error).message}</p>
-          ) : null}
-          {save.isSuccess && !dirty ? (
-            <p className="flex items-center gap-2 text-xs text-muted-foreground">
-              <CheckCircle2 className="h-4 w-4" /> Line-up saved.
+              {captainAllowed ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant={lineup.captainId === selected.id ? "primary" : "outline"}
+                    onClick={() => setDraft(setCaptain(lineup, selected.id))}
+                  >
+                    <Star className="h-4 w-4" /> Captain
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={lineup.viceCaptainId === selected.id ? "primary" : "outline"}
+                    onClick={() => setDraft(setViceCaptain(lineup, selected.id))}
+                  >
+                    <Shield className="h-4 w-4" /> Vice
+                  </Button>
+                </>
+              ) : null}
+              <Button size="sm" variant="ghost" onClick={() => setSelectedId(null)}>
+                <X className="h-4 w-4" /> Cancel
+              </Button>
+            </div>
+          ) : (
+            <p className="text-center text-xs text-muted-foreground">
+              Tap a starter or a substitute, then tap the player to swap with.
+            </p>
+          )}
+          {notice ? (
+            <p className="mt-2 flex items-center gap-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {notice}
             </p>
           ) : null}
-        </CardBody>
-      </Card>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={!dirty || save.isPending}
+            onClick={() => {
+              setDraft(null);
+              setDraftChips(null);
+              setSelectedId(null);
+              setNotice(null);
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            block
+            size="lg"
+            disabled={!dirty || save.isPending}
+            onClick={() => save.mutate()}
+          >
+            {save.isPending ? "Saving…" : "Save line-up"}
+          </Button>
+        </div>
+        {save.isError ? (
+          <p className="text-xs text-destructive">{(save.error as Error).message}</p>
+        ) : null}
+        {save.isSuccess && !dirty ? (
+          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4" /> Line-up saved.
+          </p>
+        ) : null}
+      </section>
 
       <ChipsPanel
         lineups={team.lineups}
@@ -320,7 +323,7 @@ export function LineupScreen() {
 
       <p className="text-center text-xs text-muted-foreground">
         Want different players in your squad?{" "}
-        <Link to="/fantasy/transfers" className="underline">
+        <Link to="/fantasy/transfers" className="font-medium text-primary underline">
           Make a transfer
         </Link>
         .

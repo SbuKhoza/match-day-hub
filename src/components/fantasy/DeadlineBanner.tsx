@@ -23,7 +23,7 @@ export function DeadlineBanner({ target, now }: { target: EditTarget | null; now
   return (
     <div className="space-y-2">
       {target.rolledOver && target.lockedGameweek ? (
-        <p className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+        <p className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs text-muted-foreground">
           <Lock className="mt-px h-4 w-4 shrink-0" />
           <span>
             The deadline for gameweek {target.lockedGameweek.number} has passed, so that team is
@@ -32,7 +32,7 @@ export function DeadlineBanner({ target, now }: { target: EditTarget | null; now
         </p>
       ) : null}
       {target.deadline !== null ? (
-        <p className="flex items-center gap-2 rounded-lg border border-border p-3 text-xs">
+        <p className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-xs">
           <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span>
             Gameweek {target.number} deadline{" "}

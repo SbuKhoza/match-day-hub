@@ -1,17 +1,17 @@
 import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, History, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
-import { Card, CardBody } from "@/components/common/Card";
-import { PageHeader } from "@/components/common/PageHeader";
 import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
-import { EmptyState } from "@/components/fantasy/EmptyState";
+import { CompactEmpty } from "@/components/fantasy/CompactEmpty";
+import { FantasySectionHead } from "@/components/fantasy/FantasySectionHead";
+import { FantasySubHeader } from "@/components/fantasy/FantasySubHeader";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
-import { StatTile } from "@/components/fantasy/StatTile";
+import { StatStrip } from "@/components/fantasy/StatStrip";
 import {
   Sheet,
   SheetContent,
@@ -110,9 +110,9 @@ export function TransfersScreen() {
 
   if (!team) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Transfers" subtitle="Swap players in and out of your squad." />
-        <EmptyState
+      <div className="-mt-3 space-y-5 sm:-mt-4">
+        <FantasySubHeader title="Transfers" subtitle="Swap players in and out of your squad." />
+        <CompactEmpty
           icon={ArrowLeftRight}
           title="Build a team first"
           description="Once your 17-player squad is saved you can start making transfers here."
@@ -145,7 +145,7 @@ export function TransfersScreen() {
           </div>
         ))}
         {candidates.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <p className="py-6 text-center text-sm text-muted-foreground">
             No affordable replacements match those filters.
           </p>
         ) : null}
@@ -155,7 +155,7 @@ export function TransfersScreen() {
       ) : null}
     </>
   ) : (
-    <EmptyState
+    <CompactEmpty
       icon={ArrowLeftRight}
       title="Pick someone to transfer out"
       description="Tap a player on the pitch to see valid replacements."
@@ -163,47 +163,45 @@ export function TransfersScreen() {
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
+    <div className="-mt-3 space-y-5 sm:-mt-4">
+      <FantasySubHeader
         title="Transfers"
-        subtitle={`Gameweek ${target?.number ?? gameweek?.number ?? "—"} · like-for-like positions.`}
+        subtitle={`Gameweek ${target?.number ?? gameweek?.number ?? "—"} · like-for-like positions`}
       />
       <DeadlineBanner target={target} now={now} />
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatTile label="Budget available" value={formatRand(budgetLeft)} />
-        <StatTile label="Transfers made" value={String(transfers.length)} />
-        <StatTile label="Transferring out" value={outPlayer?.name ?? "—"} />
-      </div>
+      <StatStrip
+        items={[
+          { label: "Budget", value: formatRand(budgetLeft), hint: "available" },
+          { label: "Transfers", value: String(transfers.length), hint: "made" },
+          { label: "Out", value: outPlayer?.name ?? "—", hint: outPlayer ? "tap again to cancel" : "none selected" },
+        ]}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <Card>
-          <CardBody className="space-y-4">
-            <h2 className="text-lg font-semibold">Your squad</h2>
-            <Pitch
-              squad={squad}
-              starters={team.starters}
-              captainId={team.captainId}
-              outId={outId}
-              onPlayerClick={(player) => {
-                const next = outId === player.id ? null : player.id;
-                setOutId(next);
-                if (next && !isDesktop) setPoolOpen(true);
-              }}
-            />
-            <p className="text-center text-xs text-muted-foreground">
-              Tap the player you want to transfer out, then choose a replacement.
-            </p>
-          </CardBody>
-        </Card>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <section className="home-card space-y-3 p-3.5">
+          <FantasySectionHead title="Your squad" icon={Users} />
+          <Pitch
+            squad={squad}
+            starters={team.starters}
+            captainId={team.captainId}
+            outId={outId}
+            onPlayerClick={(player) => {
+              const next = outId === player.id ? null : player.id;
+              setOutId(next);
+              if (next && !isDesktop) setPoolOpen(true);
+            }}
+          />
+          <p className="text-center text-xs text-muted-foreground">
+            Tap the player you want to transfer out, then choose a replacement.
+          </p>
+        </section>
 
         {isDesktop ? (
-          <Card>
-            <CardBody className="space-y-4">
-              <h2 className="text-lg font-semibold">Transfer in</h2>
-              {replacements}
-            </CardBody>
-          </Card>
+          <section className="home-card space-y-3 p-3.5">
+            <FantasySectionHead title="Transfer in" icon={ArrowLeftRight} />
+            {replacements}
+          </section>
         ) : (
           <Sheet open={poolOpen && Boolean(outPlayer)} onOpenChange={setPoolOpen}>
             <SheetContent side="bottom" className="max-h-[88vh] overflow-y-auto">
@@ -219,30 +217,35 @@ export function TransfersScreen() {
         )}
       </div>
 
-      <Card>
-        <CardBody>
-          <h2 className="text-lg font-semibold">Transfer history</h2>
-          {transfers.length > 0 ? (
-            <ul className="mt-3 space-y-2 text-sm">
-              {transfers.map((transfer) => (
-                <li key={transfer.id} className="rounded-2xl border border-border px-3 py-2">
-                  GW {transfer.gameweek}:{" "}
-                  {resolve(transfer.outPlayerId)?.name ?? transfer.outPlayerId} →{" "}
-                  {resolve(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="mt-4">
-              <EmptyState
-                icon={ArrowLeftRight}
-                title="No transfers yet"
-                description="Your swaps will be listed here."
-              />
-            </div>
-          )}
-        </CardBody>
-      </Card>
+      <section>
+        <FantasySectionHead title="Transfer history" icon={History} />
+        {transfers.length > 0 ? (
+          <ul className="home-card divide-y divide-white/5 overflow-hidden text-sm">
+            {transfers.map((transfer) => (
+              <li key={transfer.id} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                <span className="shrink-0 rounded-md bg-white/[0.07] px-1.5 py-0.5 text-[10px] font-semibold">
+                  GW {transfer.gameweek}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  <span className="text-red-400">
+                    {resolve(transfer.outPlayerId)?.name ?? transfer.outPlayerId}
+                  </span>
+                  <span className="px-1.5 text-muted-foreground">→</span>
+                  <span className="text-emerald-400">
+                    {resolve(transfer.inPlayerId)?.name ?? transfer.inPlayerId}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <CompactEmpty
+            icon={ArrowLeftRight}
+            title="No transfers yet"
+            description="Your swaps will be listed here."
+          />
+        )}
+      </section>
     </div>
   );
 }

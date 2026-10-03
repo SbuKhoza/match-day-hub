@@ -53,7 +53,7 @@ export function LineupPitch({
   );
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border", className)}>
+    <div className={cn("overflow-hidden rounded-2xl border border-white/10", className)}>
       <PitchSurface className="rounded-none border-0">
         <div className="flex flex-col gap-3 sm:gap-5">
           {ROWS.map((position) => {
@@ -73,7 +73,7 @@ export function LineupPitch({
         </div>
       </PitchSurface>
 
-      <section aria-label="Substitutes" className="bg-secondary px-2 pb-3 pt-2 sm:px-6">
+      <section aria-label="Substitutes" className="bg-white/[0.04] px-2 pb-3 pt-2 sm:px-6">
         <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           Substitutes
         </p>

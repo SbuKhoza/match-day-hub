@@ -169,7 +169,7 @@ export function PitchSurface({
   return (
     <div
       className={cn(
-        "relative isolate overflow-hidden rounded-lg border border-white/20 px-2 py-4 sm:px-6 sm:py-6",
+        "relative isolate overflow-hidden rounded-2xl border border-white/20 px-2 py-4 sm:px-6 sm:py-6",
         className,
       )}
       style={{
