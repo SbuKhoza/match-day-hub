@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Field, inputClass } from "@/components/admin/AdminForm";
+import { BrandingCard } from "@/components/admin/BrandingCard";
 import { GameweekScheduleCard } from "@/components/admin/GameweekScheduleCard";
 import { SeasonDatesCard } from "@/components/admin/SeasonDatesCard";
 import { Button } from "@/components/common/Button";
@@ -33,7 +34,7 @@ export function AdminSettingsScreen() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Fantasy settings" subtitle="Rules that apply to every player's squad." />
+      <PageHeader title="Settings" subtitle="Branding and the rules that apply to every player's squad." />
       <Card>
         <CardBody className="space-y-4 p-4">
           <p className="text-sm text-muted-foreground">
@@ -62,6 +63,7 @@ export function AdminSettingsScreen() {
           </p>
         </CardBody>
       </Card>
+      <BrandingCard />
       <SeasonDatesCard />
       <GameweekScheduleCard />
     </div>

@@ -1,21 +1,32 @@
 import { Link } from "@tanstack/react-router";
 
+import { BrandBackground } from "./BrandBackground";
+import { BrandImage } from "./BrandImage";
 import { NAV_ITEMS } from "./navItems";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranding } from "@/hooks/useBranding";
 import { initials } from "@/utils/format";
 
 export function Sidebar() {
   const { profile, user } = useAuth();
+  const { branding } = useBranding();
   const name = profile?.name ?? user?.displayName ?? "Guest";
 
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col glass px-4 py-6 lg:flex">
-      <Link to="/" className="mb-8 flex items-center gap-3 px-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-xs font-bold tracking-tight text-black">
-          PSL
-        </span>
-        <span className="text-base font-semibold tracking-tight">Premier Soccer League</span>
-      </Link>
+      <div className="relative mb-8 overflow-hidden rounded-2xl">
+        <BrandBackground image={branding.topNav} />
+        <Link to="/" className="relative flex items-center gap-3 px-2 py-2">
+          {branding.logo ? (
+            <BrandImage image={branding.logo} alt="Logo" className="h-10" />
+          ) : (
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-xs font-bold tracking-tight text-black">
+              PSL
+            </span>
+          )}
+          <span className="text-base font-semibold tracking-tight">Premier Soccer League</span>
+        </Link>
+      </div>
 
       <nav className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => (

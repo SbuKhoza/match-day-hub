@@ -24,7 +24,7 @@ export const ADMIN_NAV = [
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/videos", label: "Videos", icon: Play },
   { to: "/admin/users", label: "Users", icon: Users },
-  { to: "/admin/settings", label: "Fantasy settings", icon: Settings },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
 
 /** Separate management shell — administrators never see the fan navigation. */
