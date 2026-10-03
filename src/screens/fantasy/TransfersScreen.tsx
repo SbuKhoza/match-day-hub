@@ -1,6 +1,6 @@
 import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, History, Users } from "lucide-react";
+import { ArrowLeftRight, CheckCircle2, History, Undo2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
@@ -11,6 +11,7 @@ import { FantasySubHeader } from "@/components/fantasy/FantasySubHeader";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
+import { SaveBar } from "@/components/fantasy/SaveBar";
 import { StatStrip } from "@/components/fantasy/StatStrip";
 import {
   Sheet,
@@ -45,6 +46,8 @@ export function TransfersScreen() {
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [outId, setOutId] = useState<string | null>(null);
+  /** Staged transfers. Nothing is written until the user saves. `outId` is the player originally in that slot. */
+  const [swaps, setSwaps] = useState<{ outId: string; inId: string }[]>([]);
   const [poolOpen, setPoolOpen] = useState(false);
   const [filters, setFilters] = useState<PlayerFilterState>({
     search: "",
@@ -54,54 +57,94 @@ export function TransfersScreen() {
   });
 
   const resolve = (id: string) => byId.get(id);
-  const squad = (team?.squad ?? []).map(resolve).filter(Boolean) as Player[];
+  const inSlot = (id: string) => swaps.find((swap) => swap.outId === id)?.inId ?? id;
+
+  // The squad as it would look with the staged transfers applied.
+  const draftSquadIds = (team?.squad ?? []).map(inSlot);
+  const draftStarters = (team?.starters ?? []).map(inSlot);
+  const draftCaptainId = team?.captainId ? inSlot(team.captainId) : (team?.captainId ?? null);
+  const draftViceId = team?.viceCaptainId ? inSlot(team.viceCaptainId) : (team?.viceCaptainId ?? null);
+  const squad = draftSquadIds.map(resolve).filter(Boolean) as Player[];
   const outPlayer = outId ? byId.get(outId) : undefined;
   const spent = squad.reduce((sum, player) => sum + player.price, 0);
   const { budget } = useFantasySettings();
   const budgetLeft = budget - spent + (outPlayer?.price ?? 0);
 
+  // Slot the selected player originally came from (so a swap can be reverted by picking them again).
+  const originalOutId = swaps.find((swap) => swap.inId === outId)?.outId ?? outId;
+  const stagedOutIds = new Set(swaps.map((swap) => swap.outId));
+
   const candidates = useMemo(
     () =>
       players
-        .filter((player) => !team?.squad.includes(player.id))
+        .filter((player) => !draftSquadIds.includes(player.id))
+        .filter((player) => !stagedOutIds.has(player.id) || player.id === originalOutId)
         .filter((player) => !outPlayer || player.position === outPlayer.position)
         .filter((player) => filters.position === "ALL" || player.position === filters.position)
         .filter((player) => filters.clubId === "ALL" || player.clubId === filters.clubId)
         .filter((player) => player.price <= Math.min(filters.maxPrice, budgetLeft))
         .filter((player) => player.name.toLowerCase().includes(filters.search.trim().toLowerCase()))
         .slice(0, 40),
-    [players, team, outPlayer, filters, budgetLeft],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [players, swaps, team, outPlayer, filters, budgetLeft],
   );
 
+  /** Stage a transfer in memory. The slot being replaced is `outId` (the player currently shown). */
+  function stageSwap(incoming: Player) {
+    if (!outId || !originalOutId) return;
+    setSwaps((prev) => {
+      const rest = prev.filter((swap) => swap.outId !== originalOutId);
+      // Picking the player who was originally in the slot simply undoes the swap.
+      return incoming.id === originalOutId ? rest : [...rest, { outId: originalOutId, inId: incoming.id }];
+    });
+    setOutId(null);
+    setPoolOpen(false);
+  }
+
+  function undoSwap(slotOutId: string) {
+    setSwaps((prev) => prev.filter((swap) => swap.outId !== slotOutId));
+    setOutId(null);
+  }
+
+  function discard() {
+    setSwaps([]);
+    setOutId(null);
+    setPoolOpen(false);
+    makeTransfer.reset();
+  }
+
   const makeTransfer = useMutation({
-    mutationFn: async (incoming: Player) => {
-      if (!db || !uid || !team || !outId) throw new Error("Select a player to transfer out first.");
-      const nextSquad = team.squad.map((id) => (id === outId ? incoming.id : id));
-      const nextStarters = team.starters.map((id) => (id === outId ? incoming.id : id));
-      const nextPlayers = nextSquad.map(resolve).filter(Boolean) as Player[];
-      const check = validateSquad(nextPlayers, nextStarters, budget);
+    mutationFn: async () => {
+      if (!db || !uid || !team) throw new Error("You need to be signed in to save transfers.");
+      if (swaps.length === 0) return;
+      const nextPlayers = draftSquadIds.map(resolve).filter(Boolean) as Player[];
+      const check = validateSquad(nextPlayers, draftStarters, budget);
       if (!check.valid) throw new Error(check.errors[0]!);
+      const gameweekNumber = target?.number ?? gameweek?.number ?? 0;
       await saveFantasyTeam(
         db,
         uid,
         {
           name: team.name,
-          squad: nextSquad,
-          starters: nextStarters,
-          captainId: team.captainId === outId ? incoming.id : team.captainId,
-          viceCaptainId: team.viceCaptainId === outId ? incoming.id : team.viceCaptainId,
+          squad: draftSquadIds,
+          starters: draftStarters,
+          captainId: draftCaptainId,
+          viceCaptainId: draftViceId,
         },
         nextPlayers,
-        target?.number ?? gameweek?.number ?? 0,
+        gameweekNumber,
       );
-      await recordTransfer(db, {
-        uid,
-        gameweek: target?.number ?? gameweek?.number ?? 0,
-        outPlayerId: outId,
-        inPlayerId: incoming.id,
-      });
+      for (const swap of swaps) {
+        await recordTransfer(db, {
+          uid,
+          gameweek: gameweekNumber,
+          outPlayerId: swap.outId,
+          inPlayerId: swap.inId,
+        });
+      }
     },
     onSuccess: async () => {
+      setSwaps([]);
       setOutId(null);
       setPoolOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["fantasy"] });
@@ -138,9 +181,9 @@ export function TransfersScreen() {
             <Button
               size="sm"
               disabled={makeTransfer.isPending}
-              onClick={() => makeTransfer.mutate(player)}
+              onClick={() => stageSwap(player)}
             >
-              Swap
+              {player.id === originalOutId ? "Undo" : "Swap"}
             </Button>
           </div>
         ))}
@@ -150,9 +193,6 @@ export function TransfersScreen() {
           </p>
         ) : null}
       </div>
-      {makeTransfer.isError ? (
-        <p className="text-xs text-destructive">{(makeTransfer.error as Error).message}</p>
-      ) : null}
     </>
   ) : (
     <CompactEmpty
@@ -173,18 +213,28 @@ export function TransfersScreen() {
       <StatStrip
         items={[
           { label: "Budget", value: formatRand(budgetLeft), hint: "available" },
-          { label: "Transfers", value: String(transfers.length), hint: "made" },
+          {
+            label: "Transfers",
+            value: String(transfers.length),
+            hint: swaps.length > 0 ? `+${swaps.length} unsaved` : "made",
+          },
           { label: "Out", value: outPlayer?.name ?? "—", hint: outPlayer ? "tap again to cancel" : "none selected" },
         ]}
       />
+
+      {makeTransfer.isSuccess && swaps.length === 0 ? (
+        <p className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/20">
+          <CheckCircle2 className="h-4 w-4 shrink-0" /> Transfers saved.
+        </p>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <section className="home-card space-y-3 p-3.5">
           <FantasySectionHead title="Your squad" icon={Users} />
           <Pitch
             squad={squad}
-            starters={team.starters}
-            captainId={team.captainId}
+            starters={draftStarters}
+            captainId={draftCaptainId}
             outId={outId}
             onPlayerClick={(player) => {
               const next = outId === player.id ? null : player.id;
@@ -217,6 +267,32 @@ export function TransfersScreen() {
         )}
       </div>
 
+      {swaps.length > 0 ? (
+        <section>
+          <FantasySectionHead title="Pending transfers" icon={ArrowLeftRight} />
+          <ul className="home-card divide-y divide-white/5 overflow-hidden text-sm ring-1 ring-primary/30">
+            {swaps.map((swap) => (
+              <li key={swap.outId} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                <span className="min-w-0 flex-1 truncate">
+                  <span className="text-red-400">{resolve(swap.outId)?.name ?? swap.outId}</span>
+                  <span className="px-1.5 text-muted-foreground">→</span>
+                  <span className="text-emerald-400">{resolve(swap.inId)?.name ?? swap.inId}</span>
+                </span>
+                <button
+                  type="button"
+                  aria-label="Undo this transfer"
+                  disabled={makeTransfer.isPending}
+                  onClick={() => undoSwap(swap.outId)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.07] ring-1 ring-white/10 hover:bg-white/10 disabled:opacity-50"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section>
         <FantasySectionHead title="Transfer history" icon={History} />
         {transfers.length > 0 ? (
@@ -246,6 +322,18 @@ export function TransfersScreen() {
           />
         )}
       </section>
+
+      {swaps.length > 0 ? (
+        <SaveBar
+          title={`${swaps.length} unsaved ${swaps.length === 1 ? "transfer" : "transfers"}`}
+          detail={`Budget left ${formatRand(budget - spent)}`}
+          saveLabel="Save transfers"
+          saving={makeTransfer.isPending}
+          error={makeTransfer.isError ? (makeTransfer.error as Error).message : null}
+          onSave={() => makeTransfer.mutate()}
+          onDiscard={discard}
+        />
+      ) : null}
     </div>
   );
 }

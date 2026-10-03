@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   ArrowRight,
   CalendarClock,
-  ChevronRight,
   Newspaper,
   PlayCircle,
   Star,
@@ -99,29 +98,7 @@ export function FantasyScreen() {
         <FantasyOnboarding />
       )}
 
-      {/* 2. My team */}
-      {team ? (
-        <section>
-          <FantasySectionHead title="My team" icon={Users} to="/fantasy/lineup" linkLabel="View" />
-          <Link to="/fantasy/lineup" className="home-card block transition-colors hover:bg-white/[0.07]">
-            <div className="flex items-center gap-3 p-3.5">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                <Users className="h-5 w-5 text-primary" aria-hidden />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold">{team.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {team.squad.length} players · {team.starters.length} starting ·{" "}
-                  {formatRand(team.budgetSpent)} spent
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-          </Link>
-        </section>
-      ) : null}
-
-      {/* 3. Transfers + gameweek / deadline */}
+      {/* 2. Transfers + gameweek / deadline */}
       <div className="grid grid-cols-2 gap-3">
         <Link
           to="/fantasy/transfers"
@@ -162,7 +139,7 @@ export function FantasyScreen() {
         </Link>
       </div>
 
-      {/* 4. Mini-leagues */}
+      {/* 3. Mini-leagues */}
       <section>
         <FantasySectionHead title="Your mini-leagues" icon={Users} to="/fantasy/leagues" />
         {leagues && leagues.length > 0 ? (
@@ -188,13 +165,13 @@ export function FantasyScreen() {
         )}
       </section>
 
-      {/* 5. League leaders */}
+      {/* 4. League leaders */}
       <section>
         <FantasySectionHead title="League leaders" icon={Trophy} to="/stats" />
         <LeagueLeadersCard topScorer={topScorer} topAssist={topAssist} />
       </section>
 
-      {/* 6. Fantasy news */}
+      {/* 5. Fantasy news */}
       <section>
         <FantasySectionHead title="Fantasy news" icon={Newspaper} to="/news" />
         {fantasyNews.isLoading ? (
@@ -222,7 +199,7 @@ export function FantasyScreen() {
         )}
       </section>
 
-      {/* 7. Videos */}
+      {/* 6. Videos */}
       <section>
         <FantasySectionHead title="Videos" icon={PlayCircle} to="/videos" />
         {videos.isLoading ? (

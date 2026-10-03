@@ -1,12 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, LogOut } from "lucide-react";
+import { ArrowRight, Check, Heart, LogOut, Search, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/common/Button";
-import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
-import { PageHeader } from "@/components/common/PageHeader";
 import { TeamBadge } from "@/components/common/TeamBadge";
+import { FantasySectionHead } from "@/components/fantasy/FantasySectionHead";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin, useTeams } from "@/hooks/useMasterData";
 import { cn } from "@/lib/utils";
@@ -19,9 +17,13 @@ export function ProfileScreen() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState<string | null>(null);
   const [teamStatus, setTeamStatus] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const name = profile?.name ?? user?.displayName ?? "Guest";
   const clubs = teams ?? [];
+  const visibleClubs = clubs.filter((team) =>
+    team.teamName.toLowerCase().includes(search.trim().toLowerCase()),
+  );
   const favorite = clubs.find((team) => team.teamId === profile?.favoriteTeam) ?? null;
 
   async function handleTeamChange(teamId: string) {
@@ -45,92 +47,121 @@ export function ProfileScreen() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Profile" subtitle="Your account and favourite club." />
+    <div className="-mt-3 space-y-5 sm:-mt-4">
+      <h1 className="text-xl font-bold">Profile</h1>
 
-      <Card>
-        <CardBody className="flex flex-wrap items-center gap-4">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/25 text-lg font-semibold">
+      {/* Account */}
+      <section className="home-card relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent"
+        />
+        <div className="relative flex items-center gap-4 p-4">
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xl font-bold ring-1 ring-white/10">
             {initials(name)}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xl font-semibold">{name}</p>
-            <p className="truncate text-sm text-muted-foreground">
+            <p className="truncate text-lg font-semibold leading-tight">{name}</p>
+            <p className="truncate text-xs text-muted-foreground">
               {profile?.email ?? user?.email}
             </p>
-          </div>
-          {favorite ? (
-            <TeamBadge
-              team={{ name: favorite.teamName, shortName: favorite.shortName, logo: favorite.logo }}
-              size="lg"
-            />
-          ) : null}
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardBody>
-          <h2 className="text-lg font-semibold">Favourite team</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {saving
-              ? "Saving…"
-              : (teamStatus ?? "Tap a club to update your personalised feed.")}
-          </p>
-          <div className="mt-4">
-            {isLoading ? <LoadingState label="Loading clubs…" /> : null}
-            {!isLoading && clubs.length === 0 ? (
-              <EmptyMessage title="No clubs have been imported yet." />
-            ) : null}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {clubs.map((team) => (
-                <button
-                  key={team.teamId}
-                  type="button"
-                  onClick={() => handleTeamChange(team.teamId)}
-                  disabled={saving !== null}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl bg-white/5 p-4 text-left transition-colors hover:bg-white/10 disabled:opacity-60",
-                    profile?.favoriteTeam === team.teamId && "bg-primary/20",
-                  )}
-                >
-                  <TeamBadge
-                    team={{ name: team.teamName, shortName: team.shortName, logo: team.logo }}
-                    size="sm"
-                  />
-                  <span className="min-w-0 truncate text-sm font-medium">{team.teamName}</span>
-                  {profile?.favoriteTeam === team.teamId ? (
-                    <Check className="ml-auto h-4 w-4 shrink-0" />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-
-      {isAdmin ? (
-        <Card>
-          <CardBody className="flex flex-wrap items-center gap-3 p-4">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-base font-semibold">Data management</h2>
-              <p className="text-sm text-muted-foreground">
-                Import the clubs and players files and review past imports.
+            {favorite ? (
+              <p className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.07] py-1 pl-1 pr-3 text-xs font-medium ring-1 ring-white/10">
+                <TeamBadge
+                  team={{ name: favorite.teamName, shortName: favorite.shortName, logo: favorite.logo }}
+                  size="sm"
+                />
+                <span className="truncate">{favorite.teamName}</span>
               </p>
-            </div>
-            <Link
-              to="/admin"
-              className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-            >
-              Open
-            </Link>
-          </CardBody>
-        </Card>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">No favourite club yet</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Favourite club */}
+      <section>
+        <FantasySectionHead title="Favourite club" icon={Heart} />
+        <p className="mb-3 text-xs text-muted-foreground" aria-live="polite">
+          {saving ? "Saving…" : (teamStatus ?? "Tap a club to update your personalised feed.")}
+        </p>
+
+        {clubs.length > 8 ? (
+          <label className="home-card mb-3 flex items-center gap-2 px-3 py-2.5">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search clubs"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+        ) : null}
+
+        {isLoading ? <LoadingState label="Loading clubs…" /> : null}
+        {!isLoading && clubs.length === 0 ? (
+          <EmptyMessage title="No clubs have been imported yet." />
+        ) : null}
+        {!isLoading && clubs.length > 0 && visibleClubs.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">No clubs match your search.</p>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+          {visibleClubs.map((team) => {
+            const selected = profile?.favoriteTeam === team.teamId;
+            return (
+              <button
+                key={team.teamId}
+                type="button"
+                onClick={() => handleTeamChange(team.teamId)}
+                disabled={saving !== null}
+                aria-pressed={selected}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-xl bg-white/[0.04] p-3 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.08] disabled:opacity-60",
+                  selected && "bg-primary/15 ring-primary/60",
+                )}
+              >
+                <TeamBadge
+                  team={{ name: team.teamName, shortName: team.shortName, logo: team.logo }}
+                  size="sm"
+                />
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{team.teamName}</span>
+                {selected ? <Check className="h-4 w-4 shrink-0 text-primary" /> : null}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Admin shortcut */}
+      {isAdmin ? (
+        <Link
+          to="/admin"
+          className="home-card flex items-center gap-3 p-3.5 transition-colors hover:bg-white/[0.07]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Admin</span>
+            <span className="block text-xs text-muted-foreground">
+              Manage data, content, branding and settings.
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
       ) : null}
 
-      <Button variant="outline" size="lg" block onClick={handleLogout}>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.05] py-3 text-sm font-semibold text-red-400 ring-1 ring-white/10 transition-colors hover:bg-white/10"
+      >
         <LogOut className="h-4 w-4" />
         Log out
-      </Button>
+      </button>
     </div>
   );
 }

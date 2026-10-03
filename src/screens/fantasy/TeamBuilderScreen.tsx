@@ -11,6 +11,7 @@ import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
+import { SaveButton } from "@/components/fantasy/SaveButton";
 import { StatTile } from "@/components/fantasy/StatTile";
 import {
   Sheet,
@@ -318,18 +319,21 @@ export function TeamBuilderScreen() {
               </p>
             )}
 
-            <Button
-              block
-              size="lg"
-              disabled={!complete || save.isPending}
+            <SaveButton
+              label={existing ? "Update team" : "Save team"}
+              pendingLabel="Saving team…"
+              pending={save.isPending}
+              disabled={!complete}
               onClick={() => save.mutate()}
-            >
-              {save.isPending ? "Saving…" : existing ? "Update team" : "Save team"}
-            </Button>
+            />
             {save.isError ? (
               <p className="text-xs text-destructive">{(save.error as Error).message}</p>
             ) : null}
-            {save.isSuccess ? <p className="text-xs text-muted-foreground">Team saved.</p> : null}
+            {save.isSuccess ? (
+              <p className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/20">
+                <CheckCircle2 className="h-4 w-4 shrink-0" /> Team saved.
+              </p>
+            ) : null}
           </CardBody>
         </Card>
 

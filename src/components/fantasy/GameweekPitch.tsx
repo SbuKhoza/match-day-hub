@@ -40,6 +40,46 @@ function statSummary(stats?: PlayerStatLine): string {
   return parts.join(" ");
 }
 
+/** Background for a points badge: grey for none/unknown, red for negative, green scale otherwise. */
+function pointsTone(hasData: boolean, points: number): string {
+  if (!hasData || points === 0) return "bg-neutral-900/85";
+  if (points < 0) return "bg-red-600";
+  return points >= 8 ? "bg-emerald-500" : "bg-emerald-700";
+}
+
+/** A substitute: no coloured block behind it, just the shirt, name, points badge and stats. */
+function BenchTile({ entry }: { entry: GameweekPitchEntry }) {
+  const { player, points, stats } = entry;
+  const hasData = stats !== undefined;
+  const summary = statSummary(stats);
+
+  return (
+    <div
+      className="flex min-w-0 flex-col items-center"
+      title={`${player.name} — ${hasData ? `${points} pts` : "no data"}${summary ? ` (${summary})` : ""}`}
+    >
+      <Shirt player={player} />
+      <span className="mt-1 block w-full truncate text-center text-[10px] font-semibold leading-4 sm:text-xs">
+        {shortName(player.name)}
+      </span>
+      <span
+        className={cn(
+          "mt-0.5 rounded-full px-2 text-[11px] font-bold leading-5 tabular-nums text-white sm:text-xs",
+          pointsTone(hasData, points),
+        )}
+      >
+        {hasData ? points : "–"}
+      </span>
+      <span className="mt-0.5 block h-3 w-full truncate text-center text-[9px] leading-3 text-muted-foreground sm:text-[10px]">
+        {summary}
+      </span>
+      <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {player.position}
+      </span>
+    </div>
+  );
+}
+
 function PlayerTile({ entry, bench = false }: { entry: GameweekPitchEntry; bench?: boolean }) {
   const { player, points, captain, vice, stats } = entry;
   const hasData = stats !== undefined;
@@ -72,13 +112,7 @@ function PlayerTile({ entry, bench = false }: { entry: GameweekPitchEntry; bench
       <span
         className={cn(
           "block w-full truncate px-0.5 text-center text-[11px] font-bold leading-4 tabular-nums text-white sm:text-xs sm:leading-5",
-          !hasData || points === 0
-            ? "bg-neutral-900/85"
-            : points < 0
-              ? "bg-red-600"
-              : points >= 8
-                ? "bg-emerald-500"
-                : "bg-emerald-700",
+          pointsTone(hasData, points),
         )}
       >
         {hasData ? points : "–"}
@@ -96,7 +130,7 @@ function PlayerTile({ entry, bench = false }: { entry: GameweekPitchEntry; bench
  */
 export function GameweekPitch({ starters, bench, className }: GameweekPitchProps) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border", className)}>
+    <div className={cn("overflow-hidden rounded-2xl border border-white/10", className)}>
       <PitchSurface className="rounded-none border-0">
         <div className="flex flex-col gap-3 sm:gap-5">
           {ROWS.map((position) => {
@@ -120,23 +154,16 @@ export function GameweekPitch({ starters, bench, className }: GameweekPitchProps
         </div>
       </PitchSurface>
 
-      <section aria-label="Substitutes" className="bg-secondary px-2 pb-3 pt-2 sm:px-6">
-        <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Substitutes
-        </p>
-        <div className="flex items-start justify-center gap-1 sm:gap-3">
+      <section aria-label="Substitutes" className="px-3 pb-3 pt-3 sm:px-6">
+        <div className="mb-2.5 flex items-center gap-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Substitutes
+          </p>
+          <span className="h-px flex-1 bg-white/10" />
+        </div>
+        <div className="grid grid-cols-6 gap-1 sm:gap-3">
           {bench.map((entry) => (
-            <div
-              key={entry.player.id}
-              className="flex w-[15.5%] max-w-[92px] min-w-0 flex-col items-center"
-            >
-              <div className="w-full rounded-md bg-[oklch(0.55_0.15_145)] pb-0.5">
-                <PlayerTile entry={entry} bench />
-              </div>
-              <span className="mt-1 text-[10px] font-semibold text-muted-foreground">
-                {entry.player.position}
-              </span>
-            </div>
+            <BenchTile key={entry.player.id} entry={entry} />
           ))}
         </div>
       </section>

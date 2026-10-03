@@ -10,6 +10,7 @@ import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
 import { CompactEmpty } from "@/components/fantasy/CompactEmpty";
 import { FantasySubHeader } from "@/components/fantasy/FantasySubHeader";
 import { LineupPitch } from "@/components/fantasy/LineupPitch";
+import { SaveBar } from "@/components/fantasy/SaveBar";
 import { StatStrip } from "@/components/fantasy/StatStrip";
 import { useEditableGameweek, useFantasyDb, useFantasyTeam, usePlayers } from "@/hooks/useFantasy";
 import { NO_CHIPS, sameChips, type ChipKey } from "@/services/chipService";
@@ -223,6 +224,15 @@ export function LineupScreen() {
           ) : null}
         </div>
 
+        <ChipsPanel
+          lineups={team.lineups}
+          chips={chips}
+          gameweek={editingGw}
+          half={half}
+          onToggle={toggleChip}
+          disabled={save.isPending}
+        />
+
         <LineupPitch
           starters={starters}
           bench={bench}
@@ -280,46 +290,12 @@ export function LineupScreen() {
           ) : null}
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            disabled={!dirty || save.isPending}
-            onClick={() => {
-              setDraft(null);
-              setDraftChips(null);
-              setSelectedId(null);
-              setNotice(null);
-            }}
-          >
-            Reset
-          </Button>
-          <Button
-            block
-            size="lg"
-            disabled={!dirty || save.isPending}
-            onClick={() => save.mutate()}
-          >
-            {save.isPending ? "Saving…" : "Save line-up"}
-          </Button>
-        </div>
-        {save.isError ? (
-          <p className="text-xs text-destructive">{(save.error as Error).message}</p>
-        ) : null}
         {save.isSuccess && !dirty ? (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" /> Line-up saved.
+          <p className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/20">
+            <CheckCircle2 className="h-4 w-4 shrink-0" /> Line-up saved.
           </p>
         ) : null}
       </section>
-
-      <ChipsPanel
-        lineups={team.lineups}
-        chips={chips}
-        gameweek={editingGw}
-        half={half}
-        onToggle={toggleChip}
-        disabled={save.isPending}
-      />
 
       <p className="text-center text-xs text-muted-foreground">
         Want different players in your squad?{" "}
@@ -328,6 +304,24 @@ export function LineupScreen() {
         </Link>
         .
       </p>
+
+      {dirty ? (
+        <SaveBar
+          title="Unsaved line-up changes"
+          detail={`Gameweek ${editingGw}`}
+          saveLabel="Save line-up"
+          discardLabel="Reset"
+          saving={save.isPending}
+          error={save.isError ? (save.error as Error).message : null}
+          onSave={() => save.mutate()}
+          onDiscard={() => {
+            setDraft(null);
+            setDraftChips(null);
+            setSelectedId(null);
+            setNotice(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
