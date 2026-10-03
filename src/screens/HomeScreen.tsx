@@ -320,7 +320,7 @@ function HomeSectionHead({
   title: string;
   subtitle?: string;
   icon: LucideIcon;
-  to?: string;
+  to?: string | undefined;
 }) {
   return (
     <div className="mb-2.5 flex items-start justify-between gap-3">
