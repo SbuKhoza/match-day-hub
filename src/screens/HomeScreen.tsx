@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowRight, CalendarDays, Info, ListOrdered, Newspaper, PlayCircle, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowRight, CalendarDays, Info, ListOrdered, Newspaper, PlayCircle, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
@@ -178,6 +178,37 @@ export function HomeScreen() {
         </section>
       ) : null}
 
+      <div className="grid gap-6 sm:grid-cols-2 sm:gap-3">
+        <section className="min-w-0">
+          <HomeSectionHead title="News" icon={Newspaper} to="/news" />
+          {articles.isLoading ? (
+            <LoadingState label="Loading the latest news…" />
+          ) : !articles.data || articles.data.length === 0 ? (
+            <CompactEmpty
+              icon={Newspaper}
+              title="No news available yet."
+              description="Articles appear here once a news source is connected."
+            />
+          ) : (
+            <NewsCarousel articles={articles.data} />
+          )}
+        </section>
+        <section className="min-w-0">
+          <HomeSectionHead title="Videos" icon={PlayCircle} to="/videos" />
+          {videos.isLoading ? (
+            <LoadingState label="Loading videos…" />
+          ) : !videos.data || videos.data.length === 0 ? (
+            <CompactEmpty
+              icon={PlayCircle}
+              title="No videos available yet."
+              description="Clips appear here once a video source is connected."
+            />
+          ) : (
+            <VideoCarousel videos={videos.data} />
+          )}
+        </section>
+      </div>
+
       <section>
         <HomeSectionHead title="League leaders" icon={Trophy} to="/stats" />
         <div role="tablist" aria-label="League leaders" className="mb-3 inline-flex rounded-full bg-white/5 p-1 ring-1 ring-white/10">
@@ -267,45 +298,6 @@ export function HomeScreen() {
           </div>
         )}
         <LiveDataFooter meta={standings.meta} />
-      </section>
-
-      <div className="grid gap-6 sm:grid-cols-2 sm:gap-3">
-        <section className="min-w-0">
-          <HomeSectionHead title="News" icon={Newspaper} to="/news" />
-          {articles.isLoading ? (
-            <LoadingState label="Loading the latest news…" />
-          ) : !articles.data || articles.data.length === 0 ? (
-            <CompactEmpty
-              icon={Newspaper}
-              title="No news available yet."
-              description="Articles appear here once a news source is connected."
-            />
-          ) : (
-            <NewsCarousel articles={articles.data} />
-          )}
-        </section>
-        <section className="min-w-0">
-          <HomeSectionHead title="Videos" icon={PlayCircle} to="/videos" />
-          {videos.isLoading ? (
-            <LoadingState label="Loading videos…" />
-          ) : !videos.data || videos.data.length === 0 ? (
-            <CompactEmpty
-              icon={PlayCircle}
-              title="No videos available yet."
-              description="Clips appear here once a video source is connected."
-            />
-          ) : (
-            <VideoCarousel videos={videos.data} />
-          )}
-        </section>
-      </div>
-
-      <section>
-        <HomeSectionHead title="Clean sheets" icon={ShieldCheck} />
-        <CompactNotice
-          title="Clean sheet leaders aren't available yet."
-          description="This data provider doesn't publish goalkeeper stats — it can be added here once a source is connected."
-        />
       </section>
     </div>
   );
