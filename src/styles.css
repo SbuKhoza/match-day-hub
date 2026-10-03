@@ -187,7 +187,7 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: oklch(20.463% 0.00002 271.152 / 0.911);
+    background: oklch(20.623% 0.05385 304.321 / 0.401);
   }
 
   html.light body::before,
@@ -250,9 +250,13 @@
     display: none;
   }
 }
+/* Same surface as the Home fixture cards (card-surface) so every card shares one colour. */
 @utility home-card {
-  background-color: oklch(1 0 0 / 0.045);
-  border: 1px solid oklch(1 0 0 / 0.07);
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 0;
   border-radius: var(--radius-3xl);
-  box-shadow: 0 1px 2px oklch(0 0 0 / 0.25);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
