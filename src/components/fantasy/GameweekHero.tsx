@@ -25,10 +25,6 @@ export function GameweekHero({
 }) {
   return (
     <section className="home-card relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent"
-      />
       <div className="relative space-y-4 p-4">
         <Link to="/fantasy/lineup" className="flex items-center justify-between gap-3">
           <span className="min-w-0">

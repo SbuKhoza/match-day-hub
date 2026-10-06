@@ -5,10 +5,6 @@ import { ArrowRight, Trophy } from "lucide-react";
 export function FantasyOnboarding() {
   return (
     <section className="home-card relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent"
-      />
       <Trophy
         aria-hidden
         className="pointer-events-none absolute -right-4 top-2 h-36 w-36 opacity-[0.06]"

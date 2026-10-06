@@ -52,10 +52,6 @@ export function ProfileScreen() {
 
       {/* Account */}
       <section className="home-card relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent"
-        />
         <div className="relative flex items-center gap-4 p-4">
           <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xl font-bold ring-1 ring-white/10">
             {initials(name)}

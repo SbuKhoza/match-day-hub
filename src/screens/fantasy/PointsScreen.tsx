@@ -120,10 +120,6 @@ export function PointsScreen() {
 
       {/* Points summary */}
       <section className="home-card relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent"
-        />
         <div className="relative p-4">
           <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3 text-center">
             <div>
