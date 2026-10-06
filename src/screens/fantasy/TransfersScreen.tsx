@@ -1,6 +1,6 @@
 import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, CheckCircle2, History, Undo2, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, CheckCircle2, History, Info, Undo2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
@@ -29,7 +29,13 @@ import {
   useTransfers,
 } from "@/hooks/useFantasy";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useTransferAllowance } from "@/hooks/useTransferAllowance";
 import { recordTransfer, saveFantasyTeam, validateSquad } from "@/services/fantasyService";
+import {
+  EXTRA_TRANSFER_PENALTY,
+  FREE_TRANSFERS_PER_GAMEWEEK,
+  MAX_BANKED_TRANSFERS,
+} from "@/services/transferRules";
 import { SQUAD_RULES, type Player } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
@@ -49,6 +55,7 @@ export function TransfersScreen() {
   /** Staged transfers. Nothing is written until the user saves. `outId` is the player originally in that slot. */
   const [swaps, setSwaps] = useState<{ outId: string; inId: string }[]>([]);
   const [poolOpen, setPoolOpen] = useState(false);
+  const allowance = useTransferAllowance(swaps.length);
   const [filters, setFilters] = useState<PlayerFilterState>({
     search: "",
     position: "ALL",
@@ -121,7 +128,7 @@ export function TransfersScreen() {
       const check = validateSquad(nextPlayers, draftStarters, budget);
       if (!check.valid) throw new Error(check.errors[0]!);
       const gameweekNumber = target?.number ?? gameweek?.number ?? 0;
-      await saveFantasyTeam(
+      const saved = await saveFantasyTeam(
         db,
         uid,
         {
@@ -133,11 +140,13 @@ export function TransfersScreen() {
         },
         nextPlayers,
         gameweekNumber,
+        { newTransfers: swaps.length },
       );
+      const appliedGameweek = saved.appliedGameweek ?? gameweekNumber;
       for (const swap of swaps) {
         await recordTransfer(db, {
           uid,
-          gameweek: gameweekNumber,
+          gameweek: appliedGameweek,
           outPlayerId: swap.outId,
           inPlayerId: swap.inId,
         });
@@ -214,13 +223,33 @@ export function TransfersScreen() {
         items={[
           { label: "Budget", value: formatRand(budgetLeft), hint: "available" },
           {
-            label: "Transfers",
-            value: String(transfers.length),
-            hint: swaps.length > 0 ? `+${swaps.length} unsaved` : "made",
+            label: "Free transfers",
+            value: allowance.unlimited ? "Unlimited" : String(allowance.remaining),
+            hint: allowance.unlimited ? "until the deadline" : `of ${allowance.available} this GW`,
           },
           { label: "Out", value: outPlayer?.name ?? "—", hint: outPlayer ? "tap again to cancel" : "none selected" },
         ]}
       />
+
+      {allowance.extra > 0 ? (
+        <p className="flex items-start gap-2 rounded-xl bg-red-500/10 px-3 py-2.5 text-xs font-medium text-red-300 ring-1 ring-red-500/20">
+          <AlertTriangle className="mt-px h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            You&apos;re making {allowance.extra} more {allowance.extra === 1 ? "transfer" : "transfers"} than
+            you have free. This will cost you −{allowance.penalty} points in gameweek{" "}
+            {allowance.gameweek || "—"}.
+          </span>
+        </p>
+      ) : (
+        <p className="flex items-start gap-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
+          <Info className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span>
+            {allowance.unlimited
+              ? `Build freely: transfers are unlimited until this gameweek's deadline. After that you get ${FREE_TRANSFERS_PER_GAMEWEEK} free transfer each gameweek, and each extra costs −${EXTRA_TRANSFER_PENALTY} points.`
+              : `You get ${FREE_TRANSFERS_PER_GAMEWEEK} free transfer every gameweek. Unused ones carry over, up to ${MAX_BANKED_TRANSFERS}. Each extra transfer costs −${EXTRA_TRANSFER_PENALTY} points.`}
+          </span>
+        </p>
+      )}
 
       {makeTransfer.isSuccess && swaps.length === 0 ? (
         <p className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/20">
@@ -326,7 +355,13 @@ export function TransfersScreen() {
       {swaps.length > 0 ? (
         <SaveBar
           title={`${swaps.length} unsaved ${swaps.length === 1 ? "transfer" : "transfers"}`}
-          detail={`Budget left ${formatRand(budget - spent)}`}
+          detail={
+            allowance.unlimited
+              ? "Unlimited transfers"
+              : allowance.extra > 0
+                ? `−${allowance.penalty} pts penalty`
+                : `${allowance.remaining} free left`
+          }
           saveLabel="Save transfers"
           saving={makeTransfer.isPending}
           error={makeTransfer.isError ? (makeTransfer.error as Error).message : null}

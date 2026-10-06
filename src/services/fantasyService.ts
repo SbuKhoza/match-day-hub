@@ -31,6 +31,7 @@ import { SQUAD_RULES, SQUAD_SIZE } from "@/types/fantasy";
 import { getFantasySettings } from "./adminService";
 import { assertChipsAllowed, NO_CHIPS } from "./chipService";
 import { listGameweeks, resolveEditTarget, seasonHalfFor } from "./gameweekService";
+import { firstGameweekOf, transferAllowance } from "./transferRules";
 
 export const COLLECTIONS = {
   fantasyTeams: "fantasyTeams",
@@ -95,6 +96,8 @@ export async function fetchFantasyTeam(db: Firestore, uid: string): Promise<Fant
 }
 
 export interface SaveTeamOptions {
+  /** Number of transfers this save makes. Used to work out the penalty for transfers beyond the free ones. */
+  newTransfers?: number;
   /** Chips to switch on for the game week being edited. Omit to leave the saved chips as they are. */
   chips?: GameweekChips;
 }
@@ -113,7 +116,7 @@ export async function saveFantasyTeam(
   players: Player[],
   _gameweek?: number,
   options: SaveTeamOptions = {},
-): Promise<{ appliedGameweek: number | null }> {
+): Promise<{ appliedGameweek: number | null; transferPenalty: number }> {
   const [{ budget, secondHalfStart }, gameweeks, existing] = await Promise.all([
     getFantasySettings(db),
     listGameweeks(db),
@@ -133,7 +136,7 @@ export async function saveFantasyTeam(
   // No game weeks scheduled yet: nothing to lock, keep the plain team document.
   if (!target) {
     await setDoc(doc(db, COLLECTIONS.fantasyTeams, uid), { ...base, gameweek: _gameweek ?? 0 }, { merge: true });
-    return { appliedGameweek: null };
+    return { appliedGameweek: null, transferPenalty: 0 };
   }
 
   const lineups: Record<string, GameweekLineup> = { ...(existing?.lineups ?? {}) };
@@ -164,12 +167,32 @@ export async function saveFantasyTeam(
     half,
   };
 
+  // Transfers beyond the free allowance cost points in the game week they apply to.
+  let transferPenalties = existing?.transferPenalties;
+  let transferPenalty = transferPenalties?.[key] ?? 0;
+  if (options.newTransfers && options.newTransfers > 0) {
+    const history = await listTransfers(db, uid);
+    const allowance = transferAllowance(
+      history,
+      target.number,
+      firstGameweekOf({ lineups }, target.number),
+      options.newTransfers,
+    );
+    transferPenalty = allowance.penalty;
+    transferPenalties = { ...(transferPenalties ?? {}), [key]: allowance.penalty };
+  }
+
   await setDoc(
     doc(db, COLLECTIONS.fantasyTeams, uid),
-    { ...base, gameweek: target.number, lineups },
+    {
+      ...base,
+      gameweek: target.number,
+      lineups,
+      ...(transferPenalties ? { transferPenalties } : {}),
+    },
     { merge: true },
   );
-  return { appliedGameweek: target.number };
+  return { appliedGameweek: target.number, transferPenalty };
 }
 
 /* -------------------------------- gameweeks ------------------------------- */

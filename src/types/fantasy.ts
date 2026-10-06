@@ -49,6 +49,8 @@ export interface FantasyTeam {
   updatedAt: string;
   /** Per-game-week line-ups, keyed by game week number. Missing on teams saved before chips. */
   lineups?: Record<string, GameweekLineup>;
+  /** Points deducted for extra transfers, keyed by game week number. Applied when that game week is scored. */
+  transferPenalties?: Record<string, number>;
 }
 
 export interface League {

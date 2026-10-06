@@ -68,13 +68,15 @@ export interface GameweekResult {
   /** Bench points that count towards the total (0 unless Bench Boost is on). */
   benchCounted: number;
   chips: GameweekChips;
+  /** Points lost to extra transfers this game week (a positive number that is subtracted). */
+  transferPenalty: number;
   total: number;
   rows: GameweekBreakdownRow[];
 }
 
 type ScoringTeam = Pick<
   FantasyTeam,
-  "squad" | "starters" | "captainId" | "viceCaptainId" | "lineups"
+  "squad" | "starters" | "captainId" | "viceCaptainId" | "lineups" | "transferPenalties"
 >;
 
 /**
@@ -112,6 +114,7 @@ export function calculateGameweek(
   const benchCounted = bench.reduce((sum, r) => sum + r.points, 0);
   const captainRaw = rows.find((r) => r.captain)?.rawPoints ?? 0;
   const captainBonus = captainRaw * (captainMultiplier - 1);
+  const transferPenalty = team.transferPenalties?.[String(gameweek)] ?? 0;
 
   return {
     gameweek,
@@ -121,7 +124,8 @@ export function calculateGameweek(
     benchBoostBonus: benchCounted - (chips.benchBoost ? benchPoints : 0),
     benchCounted,
     chips,
-    total: startingPoints + captainBonus + benchCounted,
+    transferPenalty,
+    total: startingPoints + captainBonus + benchCounted - transferPenalty,
     rows,
   };
 }

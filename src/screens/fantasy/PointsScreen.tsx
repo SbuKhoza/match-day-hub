@@ -144,6 +144,11 @@ export function PointsScreen() {
               Bench <span className="ml-1 text-sm font-bold tabular-nums text-foreground">{result?.benchPoints ?? 0}</span>
             </span>
             <span className="flex flex-wrap justify-end gap-1.5">
+              {result && result.transferPenalty > 0 ? (
+                <span className="rounded-md bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-300">
+                  Transfer penalty −{result.transferPenalty}
+                </span>
+              ) : null}
               {result?.chips.doubleCaptain ? (
                 <span className="rounded-md bg-gold/15 px-2 py-0.5 text-[10px] font-semibold text-gold">
                   Double Captain active

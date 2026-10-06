@@ -29,9 +29,10 @@ import {
   useGameweek,
   useLeagues,
   usePlayerPoints,
-  useTransfers,
 } from "@/hooks/useFantasy";
 import { useTopScorers } from "@/hooks/useSportsData";
+import { useTransferAllowance } from "@/hooks/useTransferAllowance";
+import { MAX_BANKED_TRANSFERS } from "@/services/transferRules";
 import { contentService } from "@/services/contentService";
 import { calculateGameweek, calculateOverall } from "@/services/scoringService";
 import { formatKickoff, formatRand, relativeDay } from "@/utils/format";
@@ -57,7 +58,6 @@ export function FantasyScreen() {
   const { data: team, isLoading } = useFantasyTeam();
   const { data: leagues } = useLeagues();
   const { data: gameweek } = useGameweek();
-  const { data: transfers } = useTransfers();
   const { data: points } = usePlayerPoints();
 
   const fantasyNews = useQuery({
@@ -78,7 +78,7 @@ export function FantasyScreen() {
   const { budget } = useFantasySettings();
   const remaining = budget - (team?.budgetSpent ?? 0);
 
-  const transfersThisGw = transfers?.filter((t) => t.gameweek === gw).length ?? 0;
+  const allowance = useTransferAllowance();
 
   return (
     <div className="-mt-3 space-y-5 sm:-mt-4">
@@ -107,8 +107,8 @@ export function FantasyScreen() {
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Transfers
           </p>
-          <p className="mt-1 text-3xl font-bold leading-none tabular-nums">{transfersThisGw}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">made this GW</p>
+          <p className="mt-1 text-3xl font-bold leading-none tabular-nums">{allowance.unlimited ? "∞" : allowance.remaining}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">{allowance.unlimited ? "unlimited until deadline" : `free this GW · max ${MAX_BANKED_TRANSFERS}`}</p>
           <p className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-medium text-primary">
             Manage transfers <ArrowRight className="h-3 w-3" aria-hidden />
           </p>
