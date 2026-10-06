@@ -241,7 +241,7 @@ export function FantasyScreen() {
             <StatTile label="Mini-leagues" value={String(leagues?.length ?? 0)} icon={Users} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            {LINKS.map((link) => (
+            {LINKS.filter((link) => !team || link.to !== "/fantasy/team").map((link) => (
               <Link
                 key={link.to}
                 to={link.to}

@@ -28,9 +28,11 @@ import type {
   Transfer,
 } from "@/types/fantasy";
 import { SQUAD_RULES, SQUAD_SIZE } from "@/types/fantasy";
+import { CURRENT_SEASON } from "@/types/master";
 import { getFantasySettings } from "./adminService";
 import { assertChipsAllowed, NO_CHIPS } from "./chipService";
 import { listGameweeks, resolveEditTarget, seasonHalfFor } from "./gameweekService";
+import { isTeamBuiltForSeason, isTeamFromPreviousSeason } from "./seasonRules";
 import { firstGameweekOf, transferAllowance } from "./transferRules";
 
 export const COLLECTIONS = {
@@ -96,6 +98,8 @@ export async function fetchFantasyTeam(db: Firestore, uid: string): Promise<Fant
 }
 
 export interface SaveTeamOptions {
+  /** Set by the team builder. It may only build a team once per season; later changes go through transfers. */
+  isBuilder?: boolean;
   /** Number of transfers this save makes. Used to work out the penalty for transfers beyond the free ones. */
   newTransfers?: number;
   /** Chips to switch on for the game week being edited. Omit to leave the saved chips as they are. */
@@ -122,36 +126,50 @@ export async function saveFantasyTeam(
     listGameweeks(db),
     fetchFantasyTeam(db, uid),
   ]);
+  if (options.isBuilder && isTeamBuiltForSeason(existing)) {
+    throw new Error(
+      `Your team is already built for ${CURRENT_SEASON}. Use Transfers to change players; the team builder opens again next season.`,
+    );
+  }
   const check = validateSquad(players, input.starters, budget);
   if (!check.valid) throw new Error(check.errors[0] ?? "Invalid squad");
+
+  // A team from an earlier season starts clean: old line-ups, penalties and points don't carry over.
+  const newSeason = isTeamFromPreviousSeason(existing);
+  const prior = newSeason ? null : existing;
+  const write = (data: Record<string, unknown>) =>
+    newSeason
+      ? setDoc(doc(db, COLLECTIONS.fantasyTeams, uid), { ...data, totalPoints: 0 })
+      : setDoc(doc(db, COLLECTIONS.fantasyTeams, uid), data, { merge: true });
 
   const target = resolveEditTarget(gameweeks);
   const base = {
     uid,
     ...input,
     budgetSpent: check.spent,
+    season: CURRENT_SEASON,
     updatedAt: serverTimestamp(),
   };
 
   // No game weeks scheduled yet: nothing to lock, keep the plain team document.
   if (!target) {
-    await setDoc(doc(db, COLLECTIONS.fantasyTeams, uid), { ...base, gameweek: _gameweek ?? 0 }, { merge: true });
+    await write({ ...base, gameweek: _gameweek ?? 0 });
     return { appliedGameweek: null, transferPenalty: 0 };
   }
 
-  const lineups: Record<string, GameweekLineup> = { ...(existing?.lineups ?? {}) };
+  const lineups: Record<string, GameweekLineup> = { ...(prior?.lineups ?? {}) };
   const half = seasonHalfFor(target.gameweek, secondHalfStart);
   const key = String(target.number);
   const chips = options.chips ?? lineups[key]?.chips ?? NO_CHIPS;
 
   // Keep the team the locked game week started with before anything is overwritten.
   const inPlay = target.lockedGameweek;
-  if (existing && inPlay && !Object.keys(lineups).some((gw) => Number(gw) <= inPlay.number)) {
+  if (prior && inPlay && !Object.keys(lineups).some((gw) => Number(gw) <= inPlay.number)) {
     lineups[String(inPlay.number)] = {
-      squad: existing.squad,
-      starters: existing.starters,
-      captainId: existing.captainId,
-      viceCaptainId: existing.viceCaptainId,
+      squad: prior.squad,
+      starters: prior.starters,
+      captainId: prior.captainId,
+      viceCaptainId: prior.viceCaptainId,
       chips: NO_CHIPS,
       half: seasonHalfFor(inPlay, secondHalfStart),
     };
@@ -168,7 +186,7 @@ export async function saveFantasyTeam(
   };
 
   // Transfers beyond the free allowance cost points in the game week they apply to.
-  let transferPenalties = existing?.transferPenalties;
+  let transferPenalties = prior?.transferPenalties;
   let transferPenalty = transferPenalties?.[key] ?? 0;
   if (options.newTransfers && options.newTransfers > 0) {
     const history = await listTransfers(db, uid);
@@ -182,16 +200,12 @@ export async function saveFantasyTeam(
     transferPenalties = { ...(transferPenalties ?? {}), [key]: allowance.penalty };
   }
 
-  await setDoc(
-    doc(db, COLLECTIONS.fantasyTeams, uid),
-    {
-      ...base,
-      gameweek: target.number,
-      lineups,
-      ...(transferPenalties ? { transferPenalties } : {}),
-    },
-    { merge: true },
-  );
+  await write({
+    ...base,
+    gameweek: target.number,
+    lineups,
+    ...(transferPenalties ? { transferPenalties } : {}),
+  });
   return { appliedGameweek: target.number, transferPenalty };
 }
 
@@ -272,6 +286,7 @@ export async function recordTransfer(
 ): Promise<void> {
   await addDoc(collection(db, COLLECTIONS.transfers), {
     ...input,
+    season: CURRENT_SEASON,
     createdAt: new Date().toISOString(),
   });
 }
@@ -282,6 +297,8 @@ export async function listTransfers(db: Firestore, uid: string): Promise<Transfe
   );
   return snapshot.docs
     .map((d) => ({ id: d.id, ...(d.data() as Omit<Transfer, "id">) }))
+    // Only this season's transfers count; older records have no season and belong to the current one.
+    .filter((transfer) => (transfer.season ?? CURRENT_SEASON) === CURRENT_SEASON)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 

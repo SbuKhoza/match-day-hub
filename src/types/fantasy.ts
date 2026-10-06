@@ -51,6 +51,8 @@ export interface FantasyTeam {
   lineups?: Record<string, GameweekLineup>;
   /** Points deducted for extra transfers, keyed by game week number. Applied when that game week is scored. */
   transferPenalties?: Record<string, number>;
+  /** Season this team was built for, e.g. "2026/27". Missing on teams saved before seasons were tracked. */
+  season?: string;
 }
 
 export interface League {
@@ -79,6 +81,8 @@ export interface Transfer {
   outPlayerId: string;
   inPlayerId: string;
   createdAt: string;
+  /** Season the transfer was made in. Missing on older records. */
+  season?: string;
 }
 
 export interface PlayerStatLine {

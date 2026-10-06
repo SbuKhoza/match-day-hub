@@ -1,13 +1,15 @@
 import { useFantasySettings } from "@/hooks/useAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Plus, Star, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeftRight, CheckCircle2, Lock, Plus, Shirt, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
 import { EmptyMessage, LoadingState } from "@/components/common/DataState";
+import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DeadlineBanner } from "@/components/fantasy/DeadlineBanner";
+import { FantasySubHeader } from "@/components/fantasy/FantasySubHeader";
 import { Pitch } from "@/components/fantasy/Pitch";
 import { PlayerFilters, type PlayerFilterState } from "@/components/fantasy/PlayerFilters";
 import { PlayerRow } from "@/components/fantasy/PlayerRow";
@@ -29,6 +31,8 @@ import {
 } from "@/hooks/useFantasy";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { saveFantasyTeam, validateSquad } from "@/services/fantasyService";
+import { isTeamBuiltForSeason } from "@/services/seasonRules";
+import { CURRENT_SEASON } from "@/types/master";
 import { SQUAD_RULES, SQUAD_SIZE, type Player, type PlayerPosition } from "@/types/fantasy";
 import { formatRand } from "@/utils/format";
 
@@ -138,6 +142,7 @@ export function TeamBuilderScreen() {
         },
         squad,
         gameweek?.number ?? 0,
+        { isBuilder: true },
       );
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fantasy", "team", uid] }),
@@ -187,6 +192,46 @@ export function TeamBuilderScreen() {
   );
 
   const selectedStarting = selected ? starters.includes(selected.id) : false;
+
+  // The builder works once per season. After the team is saved it is locked until next season.
+  if (isTeamBuiltForSeason(existing)) {
+    return (
+      <div className="-mt-3 space-y-5 sm:-mt-4">
+        <FantasySubHeader title="Team builder" subtitle={`Season ${CURRENT_SEASON}`} />
+        {save.isSuccess ? (
+          <p className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 ring-1 ring-emerald-500/20">
+            <CheckCircle2 className="h-4 w-4 shrink-0" /> Team saved. Welcome to the season!
+          </p>
+        ) : null}
+        <section className="home-card space-y-4 p-5 text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.07]">
+            <Lock className="h-6 w-6 text-gold" aria-hidden />
+          </span>
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-bold">Your team is locked in for {CURRENT_SEASON}</h2>
+            <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+              The team builder can only be used once per season, and it opens again next season. Change
+              players with Transfers, or set your starting XI and captain in Pick Team.
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-sm grid-cols-2 gap-2.5">
+            <Link
+              to="/fantasy/transfers"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <ArrowLeftRight className="h-4 w-4" aria-hidden /> Transfers
+            </Link>
+            <Link
+              to="/fantasy/lineup"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/[0.07] px-3 py-2.5 text-sm font-semibold ring-1 ring-white/10 hover:bg-white/10"
+            >
+              <Shirt className="h-4 w-4" aria-hidden /> Pick team
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
